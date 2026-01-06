@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catan Fair Generator Pro - v4.7.9</title>
+    <title>Catan Fair Generator Pro - v4.8.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -25,7 +25,7 @@
         .road-line { stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); transition: opacity 0.3s; }
 
         .player-1 { fill: #2563eb; stroke: #1e3a8a; } .road-1 { stroke: #2563eb; }
-        .player-2 { fill: #fbbf24; stroke: #b45309; } .road-2 { stroke: #fbbf24; }
+        .player-2 { fill: #fbbf24; stroke: #b45309; } .road-2 { fill: #fbbf24; }
         .player-3 { fill: #ef4444; stroke: #991b1b; } .road-3 { stroke: #ef4444; }
         .player-4 { fill: #f8fafc; stroke: #64748b; } .road-4 { stroke: #f8fafc; }
         .player-5 { fill: #22c55e; stroke: #14532d; } .road-5 { stroke: #22c55e; }
@@ -47,6 +47,7 @@
         .stat-bar { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .robber-icon { fill: #334155; stroke: #1e293b; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); pointer-events: none; }
         .pirate-icon { fill: #0f172a; stroke: white; stroke-width: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); pointer-events: none; }
+        .fog-icon { fill: white; opacity: 0.4; pointer-events: none; }
 
         .scrollbar-thin::-webkit-scrollbar { width: 4px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
@@ -59,10 +60,10 @@
     <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
             <div class="flex items-center gap-3 mb-1">
-                <span class="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Version 4.7.9</span>
-                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest italic text-sm text-slate-500">Connected Desert Logic</span>
+                <span class="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Version 4.8.5</span>
+                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest italic text-sm text-slate-500">Fog Scenario Port Calibration</span>
             </div>
-            <h1 class="text-4xl font-black text-slate-900 tracking-tighter">Catan Fair Generator <span class="text-orange-500 underline decoration-4 underline-offset-4">PRO</span></h1>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tighter text-slate-900">Catan Fair Generator <span class="text-orange-500 underline decoration-4 underline-offset-4">PRO</span></h1>
         </div>
         <div class="flex gap-2">
             <button onclick="window.app.generate()" class="bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-2xl shadow-xl shadow-slate-200 transition-all active:scale-95 font-black uppercase tracking-widest text-sm flex items-center gap-3">
@@ -73,7 +74,7 @@
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <aside class="lg:col-span-3 space-y-6">
+        <aside class="lg:col-span-3 space-y-6 text-slate-900">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-6">
                 <section>
                     <label class="text-[11px] font-black text-slate-400 uppercase mb-3 block tracking-widest">Konfiguracja Gry</label>
@@ -88,12 +89,13 @@
                             <option value="base">Gra Podstawowa</option>
                             <option value="shores">⛵ Nowe lądy</option>
                             <option value="islands">⛵ Cztery Wyspy</option>
+                            <option value="fog">⛵ Wyspa za mgłą</option>
                         </select>
                     </div>
                 </section>
 
                 <section class="pt-4 border-t border-slate-100">
-                    <label class="text-[11px] font-black text-slate-400 uppercase mb-3 block tracking-widest">Zasady Balansu</label>
+                    <label class="text-[11px] font-black text-slate-400 uppercase mb-3 block tracking-widest text-center md:text-left">Zasady Balansu</label>
                     <div class="space-y-3">
                         <label class="flex items-center justify-between p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
                             <span class="text-xs font-bold text-slate-600">Restrykcyjne 6/8</span>
@@ -129,12 +131,12 @@
             </div>
 
             <div class="bg-slate-300 rounded-[40px] p-1 h-[750px] lg:h-[850px] relative overflow-hidden shadow-2xl border-4 border-white">
-                <div id="loadingOverlay" class="absolute inset-0 bg-white/80 z-30 flex flex-col items-center justify-center hidden backdrop-blur-md">
+                <div id="loadingOverlay" class="absolute inset-0 bg-white/80 z-30 flex flex-col items-center justify-center hidden backdrop-blur-md text-slate-900">
                     <div class="relative">
                         <div class="animate-spin rounded-full h-24 w-24 border-b-4 border-orange-500"></div>
                         <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-orange-600 uppercase">CALC</div>
                     </div>
-                    <p class="mt-6 text-sm font-black text-slate-800 uppercase tracking-widest animate-pulse text-center">Optymalizacja mapy...</p>
+                    <p class="mt-6 text-sm font-black text-slate-800 uppercase tracking-widest animate-pulse text-center">Kalibracja mapy...</p>
                 </div>
 
                 <div id="mapContainer" class="w-full h-full">
@@ -146,6 +148,7 @@
                             <g id="icon-sheep"><circle cx="0" cy="0" r="10" /><circle cx="7" cy="-5" r="4" /></g>
                             <g id="icon-ore"><path d="M-12 8 L0 -12 L12 8 L0 12 Z" /></g>
                             <g id="icon-gold"><path d="M-10 -10 L10 -10 L15 0 L10 10 L-10 10 L-15 0 Z" /></g>
+                            <g id="icon-fog"><path d="M-15 5 Q-15 -10 -5 -10 Q0 -15 10 -10 Q20 -10 20 5 Q20 15 10 15 Q0 15 -10 15 Q-15 15 -15 5 Z" fill="white" /></g>
                         </defs>
                     </svg>
                 </div>
@@ -159,7 +162,7 @@
     <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div>
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Inspektor Obiektu</p>
-            <h2 id="modalTitle" class="text-2xl font-black text-slate-900 tracking-tight text-slate-900">Szczegóły</h2>
+            <h2 id="modalTitle" class="text-2xl font-black text-slate-900 tracking-tight text-slate-900 italic">Szczegóły</h2>
         </div>
         <button onclick="window.app.closeModal()" class="p-4 hover:bg-slate-100 rounded-2xl transition-all"><svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
@@ -167,8 +170,8 @@
 </div>
 
 <script>
-    const COLORS = { forest:'#1b4332', clay:'#bc4749', wheat:'#fef08a', sheep:'#a7c957', ore:'#4a4e69', desert:'#e9c46a', gold:'#ffb703', playableSea: '#00b4d8', borderTile: '#0096c7', borderSea: '#0077b6' };
-    const RESOURCE_LABELS = { forest:'Drewno', clay:'Glina', wheat:'Zboże', sheep:'Owce', ore:'Ruda', desert:'Pustynia', gold:'Złoto', any: '3:1', border: 'Ocean' };
+    const COLORS = { forest:'#1b4332', clay:'#bc4749', wheat:'#fef08a', sheep:'#a7c957', ore:'#4a4e69', desert:'#e9c46a', gold:'#ffb703', playableSea: '#00b4d8', borderTile: '#0096c7', borderSea: '#0077b6', fog: '#94a3b8' };
+    const RESOURCE_LABELS = { forest:'Drewno', clay:'Glina', wheat:'Zboże', sheep:'Owce', ore:'Ruda', desert:'Pustynia', gold:'Złoto', any: '3:1', border: 'Ocean', fog: 'Mgła', water: 'Woda' };
     const PP_MAP = { 0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1 };
 
     const SCENARIOS = {
@@ -209,17 +212,77 @@
                     {q:-1, r:3, e:0, t:'any'}
                 ]
             },
-            5: { layout: ["lwmmmwl", "lwmmmmww", "lwmmmmmwl", "wwmmmmmmww", "lwmmmmmwl", "lwmmmmww", "lwmmmwl"], resources: {forest:7, wheat:7, sheep:7, clay:7, ore:7, gold:3, desert:2}, numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,9, 10,10,10,10, 11,11,11,11, 12,12,12], randomPorts: true, portLocations: [{q:2, r:-3, e:5}, {q:0, r:-2, e:4}, {q:3, r:-2, e:5}, {q:-1, r:-1, e:3}, {q:3, r:-1, e:0}, {q:-2, r:0, e:2}, {q:3, r:0, e:1}, {q:-2, r:2, e:2}, {q:1, r:2, e:0}, {q:-1, r:3, e:2}, {q:0, r:3, e:1}] }
+            5: { layout: ["lwmmmwl", "lwmmmmww", "lwmmmmmwl", "wwmmmmmmww", "lwmmmmmwl", "lwmmmmww", "lwmmmwl"], resources: {forest:7, wheat:7, sheep:7, clay:7, ore:7, gold:3, desert:2}, numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,10,10,10,10, 11,11,11, 11, 12,12,12], randomPorts: true, portLocations: [{q:2, r:-3, e:5}, {q:0, r:-2, e:4}, {q:3, r:-2, e:5}, {q:-1, r:-1, e:3}, {q:3, r:-1, e:0}, {q:-2, r:0, e:2}, {q:3, r:0, e:1}, {q:-2, r:2, e:2}, {q:1, r:2, e:0}, {q:-1, r:3, e:2}, {q:0, r:3, e:1}] }
         },
         islands: {
             3: { layout: ["wwmm", "mmwmm", "mmwmmw", "wwwwwww", "mmmwmm", "mmwmm", "mwww"], resources: {clay:4, forest:4, sheep:4, wheat:4, ore:4}, numbers: [2, 3,3, 4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10, 11,11, 12], ports: [{q:3, r:-2, e:5, t:'any'}, {q:-2, r:-1, e:4, t:'any'}, {q:0, r:-2, e:1, t:'ore'}, {q:2, r:-1, e:2, t:'clay'}, {q:-3, r:1, e:5, t:'forest'}, {q:-3, r:1, e:2, t:'any'}, {q:2, r:1, e:1, t:'wheat'}, {q:-2, r:2, e:1, t:'sheep'}, {q:0, r:2, e:4, t:'any'}] },
-            4: { layout: ["mwmm", "mwmmm", "mmwmmw", "wwwmwww", "mmwwmm", "mmmwm", "mmwm"], resources: {clay:4, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10,10, 11,11,11, 12], ports: [{q:-1, r:-2, e:3, t:'wheat'}, {q:3, r:-2, e:1, t:'forest'}, {q:-2, r:-1, e:1, t:'any'}, {q:0, r:0, e:4, t:'any'}, {q:-3, r:1, e:2, t:'clay'}, {q:2, r:1, e:4, t:'ore'}, {q:2, r:1, e:1, t:'any'}, {q:-2, r:2, e:5, t:'any'}, {q:-3, r:3, e:3, t:'sheep'}] },
+            4: { layout: ["mwmm", "mwmmm", "mmwmmw", "wwwmwww", "mmwwmm", "mmmwm", "mmwm"], resources: {clay:4, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10, 10, 11,11, 11, 12], ports: [{q:-1, r:-2, e:3, t:'wheat'}, {q:3, r:-2, e:1, t:'forest'}, {q:-2, r:-1, e:1, t:'any'}, {q:0, r:0, e:4, t:'any'}, {q:-3, r:1, e:2, t:'clay'}, {q:2, r:1, e:4, t:'ore'}, {q:2, r:1, e:1, t:'any'}, {q:-2, r:2, e:5, t:'any'}, {q:-3, r:3, e:3, t:'sheep'}] },
             5: {
                 layout: ["mmwmwmm", "mmwmmwmm", "mmwmmwwmw", "wwwwwwwwww", "wmwwmmwmm", "mmwmmwmm", "mmwmwmm"],
                 resources: {clay:6, forest:7, sheep:7, wheat:6, ore:6},
-                numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12,12, 4,5,9,10],
+                numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12, 4,5,9,10],
                 randomPortsFromPool: true,
                 portLocations: [{q:0, r:-3, e:4}, {q:2, r:-3, e:5}, {q:5, r:-3, e:5}, {q:-1, r:-2, e:1}, {q:4, r:-2, e:2}, {q:-2, r:-1, e:2}, {q:-4, r:2, e:3}, {q:3, r:2, e:0}, {q:-3, r:3, e:5}, {q:-1, r:2, e:2}, {q:1, r:3, e:2}]
+            }
+        },
+        fog: {
+            3: {
+                layout: ["ffwmm", "fffwmm", "wwwfwmm", "wmmwfwmw", "wmmwfww", "wmmwff", "wmwff"],
+                resources: {clay:2, forest:4, sheep:4, wheat:2, ore:2},
+                numbers: [3, 4, 5,5, 6,6, 8,8, 9,9, 10, 11,11, 12],
+                hiddenResources: {gold:2, clay:2, forest:1, sheep:1, wheat:2, ore:2, water:2},
+                hiddenNumbers: [3,3, 4,5,6,7,8,9,10,11,12],
+                pirate: {q:2, r:3},
+                ports: [
+                    {q:3, r:-3, e:5, t:'any'},
+                    {q:4, r:-3, e:0, t:'sheep'},
+                    {q:4, r:-1, e:5, t:'wheat'},
+                    {q:-2, r:0, e:2, t:'ore'},
+                    {q:3, r:0, e:0, t:'any'},
+                    {q:-2, r:1, e:2, t:'forest'},
+                    {q:-1, r:2, e:1, t:'clay'},
+                    {q:-2, r:3, e:3, t:'any'}
+                ]
+            },
+            4: {
+                layout: ["fwmmm", "ffwmmm", "wwfwwmm", "wmwffwmw", "mmwffwm", "mmwffw", "mmwff"],
+                resources: {clay:3, forest:4, sheep:4, wheat:3, ore:3},
+                numbers: [2, 11, 12, 3,3, 4,4, 5,5, 6,6, 8,8, 9,9, 10,10],
+                hiddenResources: {water:2, gold:2, clay:2, forest:1, sheep:1, wheat:2, ore:2},
+                hiddenNumbers: [11,11, 3,4,5,6,7,8,9,10,12],
+                pirate: {q:0, r:4},
+                ports: [
+                    {q:2, r:-3, e:5, t:'sheep'},
+                    {q:4, r:-3, e:4, t:'wheat'},
+                    {q:4, r:-3, e:0, t:'any'},
+                    {q:4, r:-1, e:5, t:'clay'},
+                    {q:-2, r:0, e:3, t:'forest'},
+                    {q:-3, r:1, e:2, t:'ore'},
+                    {q:3, r:1, e:5, t:'any'},
+                    {q:-3, r:3, e:1, t:'any'},
+                    {q:-3, r:3, e:3, t:'any'}
+                ]
+            },
+            5: {
+                layout: ["mwffwmm", "mwfffwmm", "mmwfffwmm", "wmmwffwmmw", "mmwfffwmm", "mmwfffwm", "mmwffwm"],
+                resources: {clay:5, forest:5, sheep:5, wheat:5, ore:4},
+                numbers: [2, 3,3, 4,4,4, 5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12],
+                hiddenResources: {water:3, gold:3, clay:2, forest:2, sheep:2, wheat:2, ore:3, desert:1},
+                hiddenNumbers: [2,2, 3,3, 5,5, 11,11, 4,6,7, 8,9,10,12],
+                pirate: {q:-1, r:4},
+                ports: [
+                    {q:4, r:-3, e:5, t:'forest'},
+                    {q:-2, r:-2, e:4, t:'any'},
+                    {q:4, r:-2, e:2, t:'sheep'},
+                    {q:-2, r:-1, e:0, t:'sheep'},
+                    {q:5, r:-1, e:5, t:'any'},
+                    {q:-3, r:0, e:3, t:'ore'},
+                    {q:4, r:1, e:1, t:'wheat'},
+                    {q:4, r:1, e:5, t:'clay'},
+                    {q:-4, r:2, e:3, t:'any'},
+                    {q:3, r:2, e:3, t:'any'},
+                    {q:-3, r:3, e:5, t:'any'}
+                ]
             }
         }
     };
@@ -227,6 +290,7 @@
     SCENARIOS.base[6] = SCENARIOS.base[5];
     SCENARIOS.shores[6] = SCENARIOS.shores[5];
     SCENARIOS.islands[6] = SCENARIOS.islands[5];
+    SCENARIOS.fog[6] = SCENARIOS.fog[5];
 
     class CatanGenerator {
         constructor() {
@@ -263,7 +327,7 @@
             while (attempt < 1500) {
                 const map = this.createSkeleton(cfg);
                 if (this.fillResources(map, cfg, sKey)) {
-                    if (this.fillNumbers(map, cfg)) {
+                    if (this.fillNumbers(map, cfg, sKey)) {
                         this.buildTopology(map);
                         this.placePorts(map, cfg);
                         this.placeBlockers(map, sKey, pCount);
@@ -292,12 +356,14 @@
                     const q = qStart + qi;
                     const canStart = char === 'm';
                     const isLand = char === 'm' || char === 'l';
+                    const isFog = char === 'f';
                     tileCoords.add(`${q},${r}`);
                     hexes.push({
                         q, r,
                         canStart: canStart,
-                        resource: isLand ? 'pending' : 'playableSea',
-                        isTile: isLand,
+                        resource: isFog ? 'fog' : (isLand ? 'pending' : 'playableSea'),
+                        isTile: isLand || isFog,
+                        isFog: isFog,
                         number: 0, x:0, y:0
                     });
                 });
@@ -323,67 +389,27 @@
             return all.filter(o => dirs.some(d => o.q === h.q+d[0] && o.r === h.r+d[1]));
         }
 
-        getIslandMap(map) {
-            const land = map.hexes.filter(h => h.isTile);
-            const islands = [];
-            const visited = new Set();
-
-            land.forEach(h => {
-                const key = `${h.q},${h.r}`;
-                if (visited.has(key)) return;
-
-                const island = [];
-                const q = [h];
-                visited.add(key);
-
-                while (q.length > 0) {
-                    const curr = q.shift();
-                    island.push(curr);
-                    this.getNeighbors(curr, land).forEach(nb => {
-                        const nbKey = `${nb.q},${nb.r}`;
-                        if (!visited.has(nbKey)) {
-                            visited.add(nbKey);
-                            q.push(nb);
-                        }
-                    });
-                }
-                islands.push(island);
-            });
-            return islands;
-        }
-
         fillResources(map, cfg, sKey) {
-            let pool = [];
-            Object.entries(cfg.resources).forEach(([res, count]) => { for(let i=0; i<count; i++) pool.push(res); });
-            const landTiles = map.hexes.filter(h => h.resource === 'pending');
+            let visiblePool = [];
+            Object.entries(cfg.resources).forEach(([res, count]) => { for(let i=0; i<count; i++) visiblePool.push(res); });
+            const visibleTiles = map.hexes.filter(h => h.resource === 'pending');
 
-            const placeWithSpacing = (tilesToFill, availablePool) => {
-                const remaining = [...availablePool];
+            const placeWithSpacing = (tilesToFill, pool) => {
+                const remaining = [...pool];
                 this.shuffle(remaining);
-
-                for (let attempt = 0; attempt < 100; attempt++) {
+                for (let attempt = 0; attempt < 50; attempt++) {
                     const localPool = [...remaining];
                     let conflict = false;
-
                     for (let i = 0; i < tilesToFill.length; i++) {
                         const tile = tilesToFill[i];
                         const neighbors = this.getNeighbors(tile, map.hexes);
-
                         let foundIndex = -1;
                         for (let j = 0; j < localPool.length; j++) {
                             const candidate = localPool[j];
-                            if (!neighbors.some(nb => nb.resource === candidate)) {
-                                foundIndex = j;
-                                break;
-                            }
+                            if (!neighbors.some(nb => nb.resource === candidate)) { foundIndex = j; break; }
                         }
-
-                        if (foundIndex !== -1) {
-                            tile.resource = localPool.splice(foundIndex, 1)[0];
-                        } else {
-                            tile.resource = localPool.shift();
-                            conflict = true;
-                        }
+                        if (foundIndex !== -1) { tile.resource = localPool.splice(foundIndex, 1)[0]; }
+                        else { tile.resource = localPool.shift(); conflict = true; }
                     }
                     if (!conflict) return true;
                     this.shuffle(remaining);
@@ -391,81 +417,27 @@
                 return false;
             };
 
-            // Wyizoluj złoto i pustynię przed resztą (priorytet rozmieszczenia)
-            const goldCount = cfg.resources.gold || 0;
-            const desertCount = cfg.resources.desert || 0;
-            const otherPool = pool.filter(r => r !== 'gold' && r !== 'desert');
-
-            landTiles.forEach(h => h.resource = 'pending');
-
-            // 1. Rozmieść pustynię (musi łączyć się z innym lądem)
-            let desertsPlaced = 0;
-            const desertCandidates = landTiles.filter(h =>
-                this.getNeighbors(h, landTiles).length > 0
-            );
-            this.shuffle(desertCandidates);
-
-            for (const cand of desertCandidates) {
-                if (desertsPlaced >= desertCount) break;
-                cand.resource = 'desert';
-                desertsPlaced++;
-            }
-
-            // 2. Rozmieść złoto (na wyspach zewnętrznych, bez sąsiedztwa i po jednym na wyspę)
             if (sKey === 'shores') {
-                const islands = this.getIslandMap(map);
-                const externalIslands = islands.filter(isl => isl.some(h => !h.canStart));
-                let goldPlaced = 0;
-                this.shuffle(externalIslands);
-
-                for (const island of externalIslands) {
-                    if (goldPlaced >= goldCount) break;
-                    const candidates = island.filter(h => !h.canStart && h.resource === 'pending');
-                    this.shuffle(candidates);
-
-                    for (const cand of candidates) {
-                        const nbGold = this.getNeighbors(cand, map.hexes).some(nb => nb.resource === 'gold');
-                        if (!nbGold) {
-                            cand.resource = 'gold';
-                            goldPlaced++;
-                            break;
-                        }
-                    }
-                }
-                // Fallback dla złota
-                if (goldPlaced < goldCount) {
-                    const fallbackCand = landTiles.filter(h => h.resource === 'pending' && !h.canStart);
-                    this.shuffle(fallbackCand);
-                    for (const c of fallbackCand) {
-                        if (goldPlaced >= goldCount) break;
-                        if (!this.getNeighbors(c, map.hexes).some(nb => nb.resource === 'gold')) {
-                            c.resource = 'gold'; goldPlaced++;
-                        }
-                    }
-                }
-            }
-
-            // 3. Wypełnij resztę zasobów z unikaniem sąsiedztwa tych samych typów
-            const remainingTiles = landTiles.filter(h => h.resource === 'pending');
-            placeWithSpacing(remainingTiles, otherPool);
-
-            if (document.getElementById('strictRules').checked) {
-                const dList = landTiles.filter(x => x.resource === 'desert');
-                for (const d of dList) { if (this.getNeighbors(d, map.hexes).some(n => n.resource === 'desert')) return false; }
+                const goldCount = cfg.resources.gold || 0;
+                const otherPool = visiblePool.filter(r => r !== 'gold');
+                this.shuffle(otherPool);
+                const externalTiles = visibleTiles.filter(h => !h.canStart);
+                const mainTiles = visibleTiles.filter(h => h.canStart);
+                this.shuffle(externalTiles);
+                for (let i = 0; i < goldCount; i++) { if (externalTiles[i]) externalTiles[i].resource = 'gold'; }
+                const remainingTiles = [...mainTiles, ...externalTiles.slice(goldCount)];
+                placeWithSpacing(remainingTiles, otherPool);
+            } else {
+                placeWithSpacing(visibleTiles, visiblePool);
             }
             return true;
         }
 
-        fillNumbers(map, cfg) {
-            const tiles = map.hexes.filter(h => h.isTile && h.resource !== 'desert');
+        fillNumbers(map, cfg, sKey) {
+            const tiles = map.hexes.filter(h => h.isTile && h.resource !== 'desert' && !h.isFog);
             const pool = [...cfg.numbers];
             this.shuffle(pool);
-            tiles.forEach((h, i) => {
-                h.number = pool[i] || 0;
-            });
-            if (document.getElementById('strictRules').checked) {
-                if (tiles.some(h => (h.number === 6 || h.number === 8) && this.getNeighbors(h, map.hexes).some(n => n.number === 6 || n.number === 8))) return false;
-            }
+            tiles.forEach((h, i) => h.number = pool[i] || 0);
             return true;
         }
 
@@ -492,13 +464,15 @@
         placePorts(map, cfg) {
             const size = 52;
             const getV = (hq, hr, corner) => {
-                const cx = 500 + size * Math.sqrt(3) * (hq + hr / 2), cy = 500 + size * (3/2) * hr;
+                const cx = 500 + size * Math.sqrt(3) * (hq + hr / 2), cy = 500 + size * (3 / 2) * hr;
                 const a = (Math.PI/180)*(60*corner-30);
                 const vx = cx + size*Math.cos(a), vy = cy + size*Math.sin(a);
                 return map.nodes.find(n => Math.hypot(n.x-vx, n.y-vy) < 5);
             };
             if (cfg.randomPorts || cfg.randomPortsFromPool) {
-                const pool = cfg.randomPortsFromPool ? ['any','any','any','any','any','sheep','sheep','forest','clay','wheat','ore'] : ['any','any','any','sheep','forest','clay','wheat','ore'];
+                const pool = (cfg.portLocations && cfg.portLocations.length > 9)
+                    ? ['any','any','any','any','any','any','sheep','forest','clay','wheat','ore']
+                    : ['any','any','any','sheep','forest','clay','wheat','ore'];
                 this.shuffle(pool);
                 cfg.portLocations.forEach((loc, i) => {
                     const n1 = getV(loc.q, loc.r, loc.e), n2 = getV(loc.q, loc.r, (loc.e+1)%6);
@@ -519,7 +493,12 @@
                 const h12 = map.hexes.find(h => h.number === 12);
                 if(h12) h12.hasRobber = true;
             }
-            if (sKey !== 'base') {
+
+            const pirateCfg = SCENARIOS[sKey][pCount].pirate;
+            if (pirateCfg) {
+                const pHex = map.hexes.find(h => h.q === pirateCfg.q && h.r === pirateCfg.r);
+                if (pHex) pHex.hasPirate = true;
+            } else if (sKey !== 'base') {
                 const piratePos = (sKey === 'shores') ? (pCount >= 5 ? {q:5, r:0} : (pCount === 4 ? {q:4, r:0} : {q:3, r:0})) : (pCount >= 5 ? {q:-4, r:0} : {q:-2, r:4});
                 const pHex = map.hexes.find(h => h.q === piratePos.q && h.r === piratePos.r);
                 if (pHex) pHex.hasPirate = true;
@@ -561,18 +540,22 @@
             });
             const pad = 40;
             this.svg.setAttribute("viewBox", `${minX - pad} ${minY - pad} ${maxX - minX + pad*2} ${maxY - minY + pad*2}`);
-
             this.state.hexes.forEach(h => {
                 const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
                 const pts = [0,1,2,3,4,5].map(i => { const a=(Math.PI/180)*(60*i-30); return `${h.x + size*Math.cos(a)},${h.y + size*Math.sin(a)}`; }).join(" ");
                 poly.setAttribute("points", pts); poly.setAttribute("class", "hex-path");
                 poly.setAttribute("fill", h.resource === 'playableSea' ? COLORS.playableSea : (h.resource === 'border' ? COLORS.borderTile : COLORS[h.resource]));
                 poly.onclick = () => this.showHexDetails(h); this.svg.appendChild(poly);
-
-                if (h.isTile && h.resource !== 'desert' && h.resource !== 'border' && h.resource !== 'playableSea') {
+                if (h.isTile && h.resource !== 'desert' && h.resource !== 'border' && h.resource !== 'playableSea' && h.resource !== 'fog') {
                     const icon = document.createElementNS("http://www.w3.org/2000/svg", "use");
                     icon.setAttribute("href", `#icon-${h.resource}`); icon.setAttribute("x", h.x); icon.setAttribute("y", h.y);
                     icon.setAttribute("class", "resource-icon text-white"); icon.setAttribute("transform", `scale(1.4) translate(${h.x/-1.4}, ${h.y/-1.4})`);
+                    this.svg.appendChild(icon);
+                }
+                if (h.isFog) {
+                    const icon = document.createElementNS("http://www.w3.org/2000/svg", "use");
+                    icon.setAttribute("href", `#icon-fog`); icon.setAttribute("x", h.x); icon.setAttribute("y", h.y);
+                    icon.setAttribute("class", "fog-icon"); icon.setAttribute("transform", `scale(1.2) translate(${h.x/-1.2}, ${h.y/-1.2})`);
                     this.svg.appendChild(icon);
                 }
                 if (h.number > 0) {
@@ -634,48 +617,102 @@
             players.forEach(p => {
                 const div = document.createElement('div');
                 div.className = `p-4 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md border-l-4 border-player-${p.id}`;
-
                 const resStats = { forest: 0, clay: 0, wheat: 0, sheep: 0, ore: 0, gold: 0 };
                 p.settlements.forEach(s => {
                     s.adj.forEach(h => {
-                        if (h.isTile && h.resource !== 'desert' && h.resource !== 'border' && h.resource !== 'playableSea') {
+                        if (h.isTile && h.resource !== 'desert' && h.resource !== 'border' && h.resource !== 'playableSea' && h.resource !== 'fog') {
                             resStats[h.resource] += PP_MAP[h.number] || 0;
                         }
                     });
                 });
-
-                const resDisplay = Object.entries(resStats)
-                    .filter(([_, val]) => val > 0)
-                    .map(([res, val]) => `
-                        <div class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                            <div class="w-2.5 h-2.5 rounded-full" style="background: ${COLORS[res]}"></div>
-                            <span class="text-[10px] font-bold text-slate-600">${val}</span>
-                        </div>
-                    `).join('');
-
+                const resDisplay = Object.entries(resStats).filter(([_, val]) => val > 0).map(([res, val]) => `
+                    <div class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                        <div class="w-2.5 h-2.5 rounded-full" style="background: ${COLORS[res]}"></div>
+                        <span class="text-[10px] font-bold text-slate-600">${val}</span>
+                    </div>`).join('');
                 div.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
                         <div class="flex items-center gap-2">
                             <div class="w-6 h-6 rounded-lg player-${p.id} flex items-center justify-center text-[10px] font-black text-white shadow-sm border border-black/5">${p.id}</div>
-                            <span class="font-black text-xs text-slate-400 uppercase tracking-tighter">Gracz ${p.id}</span>
+                            <span class="font-black text-xs text-slate-400 uppercase tracking-tighter text-slate-400">Gracz ${p.id}</span>
                         </div>
                         <span class="text-sm font-black text-slate-800">${p.pp} PP</span>
                     </div>
                     <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-3">
                         <div class="stat-bar h-full bg-slate-800 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.1)]" style="width: ${(p.pp/15)*100}%"></div>
                     </div>
-                    <div class="flex flex-wrap gap-1.5 mt-2">
-                        ${resDisplay}
-                    </div>
-                `;
+                    <div class="flex flex-wrap gap-1.5 mt-2">${resDisplay}</div>`;
                 list.appendChild(div);
             });
             document.getElementById('statsPanel').classList.remove('hidden');
         }
 
-        showHexDetails(h) { this.openModal("Szczegóły Pola", `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${COLORS[h.resource] || COLORS.playableSea}"><div class="text-4xl font-black mb-2 italic tracking-tighter uppercase">${RESOURCE_LABELS[h.resource]}</div><div class="font-bold opacity-70">${h.number ? 'Produkcja: '+h.number : 'Brak produkcji'}</div></div><div class="grid grid-cols-2 gap-4 mt-4 text-slate-900"><div class="p-4 rounded-2xl bg-slate-50 border font-mono text-center">Q: ${h.q}, R: ${h.r}</div><div class="p-4 rounded-2xl bg-slate-50 border font-bold text-center uppercase text-[10px]">${h.hasRobber ? '👤 Złodziej' : (h.hasPirate ? '🏴‍☠️ Pirat' : 'Wolne')}</div><div class="col-span-2 p-3 bg-blue-50 text-blue-600 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest">${h.canStart ? '✅ Tu można zacząć grę' : '❌ Brak startu'}</div></div>`); }
-        showNodeDetails(n) { this.openModal(n.owner ? `Osada Gracza ${n.owner}` : "Pusty Węzeł", `<div class="bg-slate-900 p-8 rounded-3xl text-white text-center"><div class="text-[10px] uppercase tracking-widest opacity-50 mb-1 text-center">Potencjał Produkcji</div><div class="text-6xl font-black text-center">${n.totalPP} <span class="text-xl opacity-30 italic">PP</span></div></div><div class="space-y-3 mt-4 text-slate-900">${n.adj.map(h => (h.isTile && h.resource !== 'border' && h.resource !== 'playableSea') ? `<div class="flex items-center justify-between p-3 bg-slate-50 border rounded-xl"><div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" style="background:${COLORS[h.resource]}"></div><span class="font-bold text-slate-900">${RESOURCE_LABELS[h.resource]}</span></div><span class="font-black text-slate-900">${h.number || ''}</span></div>` : '').join('')}</div>`); }
-        showPortDetails(p) { this.openModal("Szczegóły Portu", `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${p.type==='any'?'#1e293b':COLORS[p.type]}"><div class="text-6xl font-black mb-2 tracking-tighter">${p.type==='any'?'3:1':'2:1'}</div><div class="font-bold opacity-70 italic uppercase tracking-widest text-center">${RESOURCE_LABELS[p.type]}</div></div><p class="text-slate-500 font-medium text-center mt-4 px-4 text-xs">Pozwala na wymianę surowców w stosunku ${p.type==='any'?'3 do 1':'2 do 1 dla ' + RESOURCE_LABELS[p.type]} w banku.</p>`); }
+        showHexDetails(h) {
+            const pCount = parseInt(document.getElementById('playerCount').value);
+            const sKey = document.getElementById('scenario').value;
+            const cfg = SCENARIOS[sKey][pCount];
+            if (h.isFog) {
+                const resList = Object.entries(cfg.hiddenResources).map(([res, count]) => `
+                        <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 text-slate-900">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full" style="background: ${COLORS[res]}"></div>
+                                <span class="font-bold">${RESOURCE_LABELS[res]}</span>
+                            </div>
+                            <span class="font-black text-slate-400">x${count}</span>
+                        </div>`).join('');
+                const numList = [...new Set(cfg.hiddenNumbers)].sort((a,b) => a-b).map(num => {
+                    const count = cfg.hiddenNumbers.filter(x => x === num).length;
+                    return `<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-lg text-xs font-black">${num}${count > 1 ? ' (x'+count+')' : ''}</span>`;
+                }).join(' ');
+                const content = `
+                    <div class="p-8 rounded-3xl text-white text-center shadow-lg mb-6" style="background: ${COLORS.fog}">
+                        <div class="text-4xl font-black mb-2 italic tracking-tighter uppercase">Mgła</div>
+                        <div class="font-bold opacity-70">Pole do losowania</div>
+                    </div>
+                    <div class="space-y-4">
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2">Surowce do wymieszania:</p>
+                        <div class="grid grid-cols-1 gap-2">${resList}</div>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2 pt-2 text-slate-400 text-center">Numery do wymieszania:</p>
+                        <div class="flex flex-wrap gap-2 justify-center">${numList}</div>
+                        <div class="p-4 bg-blue-50 text-blue-700 rounded-2xl text-[11px] leading-relaxed italic border border-blue-100">
+                            <strong>Zasada:</strong> Wymieszaj powyższe pola i numery zakryte. Połóż je na planszy w miejscach oznaczonych ikoną chmury. Odkryj je dopiero, gdy gracz postawi drogę lub statek przy krawędzi tego pola.
+                        </div>
+                    </div>`;
+                this.openModal("Zasady obszaru mgły", content);
+                return;
+            }
+            const content = `
+                <div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${COLORS[h.resource] || COLORS.playableSea}">
+                    <div class="text-4xl font-black mb-2 italic tracking-tighter uppercase">${RESOURCE_LABELS[h.resource]}</div>
+                    <div class="font-bold opacity-70">${h.number ? 'Produkcja: '+h.number : 'Brak produkcji'}</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-4 text-slate-900">
+                    <div class="p-4 rounded-2xl bg-slate-50 border font-mono text-center">Q: ${h.q}, R: ${h.r}</div>
+                    <div class="p-4 rounded-2xl bg-slate-50 border font-bold text-center uppercase text-[10px] text-slate-400">${h.hasRobber ? '👤 Złodziej' : (h.hasPirate ? '🏴‍☠️ Pirat' : 'Wolne')}</div>
+                    <div class="col-span-2 p-3 bg-blue-50 text-blue-600 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest">${h.canStart ? '✅ Tu można zacząć grę' : '❌ Brak startu'}</div>
+                </div>`;
+            this.openModal("Szczegóły Pola", content);
+        }
+
+        showNodeDetails(n) {
+            this.openModal(n.owner ? `Osada Gracza ${n.owner}` : "Pusty Węzeł", `
+                <div class="bg-slate-900 p-8 rounded-3xl text-white text-center">
+                    <div class="text-[10px] uppercase tracking-widest opacity-50 mb-1 text-center">Potencjał Produkcji</div>
+                    <div class="text-6xl font-black text-center">${n.totalPP} <span class="text-xl opacity-30 italic">PP</span></div>
+                </div>
+                <div class="space-y-3 mt-4 text-slate-900">
+                    ${n.adj.map(h => (h.isTile && h.resource !== 'border' && h.resource !== 'playableSea' && h.resource !== 'fog') ? `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 border rounded-xl">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background:${COLORS[h.resource]}"></div>
+                            <span class="font-bold text-slate-900">${RESOURCE_LABELS[h.resource]}</span>
+                        </div>
+                        <span class="font-black text-slate-900">${h.number || ''}</span>
+                    </div>` : '').join('')}
+                </div>`);
+        }
+
+        showPortDetails(p) { this.openModal("Szczegóły Portu", `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${p.type==='any'?'#1e293b':COLORS[p.type]}"><div class="text-6xl font-black mb-2 tracking-tighter text-white">${p.type==='any'?'3:1':'2:1'}</div><div class="font-bold opacity-70 italic uppercase tracking-widest text-center text-white">${RESOURCE_LABELS[p.type]}</div></div><p class="text-slate-500 font-medium text-center mt-4 px-4 text-xs">Pozwala na wymianę surowców w stosunku ${p.type==='any'?'3 do 1':'2 do 1 dla ' + RESOURCE_LABELS[p.type]} w banku.</p>`); }
         openModal(t, c) { document.getElementById('modalTitle').textContent = t; document.getElementById('modalContent').innerHTML = c; document.body.classList.add('modal-open'); document.getElementById('modalOverlay').classList.remove('hidden'); setTimeout(()=>document.getElementById('modalOverlay').classList.add('opacity-100'), 10); }
         closeModal() { document.body.classList.remove('modal-open'); document.getElementById('modalOverlay').classList.remove('opacity-100'); setTimeout(()=>document.getElementById('modalOverlay').classList.add('hidden'), 300); }
         shuffle(a) { for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
