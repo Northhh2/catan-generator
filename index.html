@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catan Fair Generator Pro - v4.8.5</title>
+    <title>Catan Fair Generator Pro - v4.8.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -24,14 +24,18 @@
 
         .road-line { stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); transition: opacity 0.3s; }
 
+        /* Kolory Graczy */
         .player-1 { fill: #2563eb; stroke: #1e3a8a; } .road-1 { stroke: #2563eb; }
-        .player-2 { fill: #fbbf24; stroke: #b45309; } .road-2 { fill: #fbbf24; }
+        /* Poprawka widoczności dróg gracza 2 (ciemniejszy żółty/bursztyn) */
+        .player-2 { fill: #fbbf24; stroke: #b45309; } .road-2 { stroke: #d97706; }
         .player-3 { fill: #ef4444; stroke: #991b1b; } .road-3 { stroke: #ef4444; }
-        .player-4 { fill: #f8fafc; stroke: #64748b; } .road-4 { stroke: #f8fafc; }
+        .player-4 { fill: #f8fafc; stroke: #64748b; } .road-4 { stroke: #cbd5e1; }
         .player-5 { fill: #22c55e; stroke: #14532d; } .road-5 { stroke: #22c55e; }
         .player-6 { fill: #a855f7; stroke: #581c87; } .road-6 { stroke: #a855f7; }
 
-        .player-text-4 { fill: #1e293b !important; }
+        /* Ciemny tekst na jasnych markerach dla lepszego kontrastu */
+        .player-text-2, .player-text-4 { fill: #1e293b !important; }
+
         .port-line { stroke: #1e293b; stroke-width: 5; stroke-linecap: round; opacity: 0.6; }
         .port-bg { stroke: white; stroke-width: 2; cursor: pointer; transition: all 0.2s; transform-box: fill-box; transform-origin: center; }
         .port-bg:hover { transform: scale(1.3); }
@@ -60,8 +64,8 @@
     <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
             <div class="flex items-center gap-3 mb-1">
-                <span class="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Version 4.8.5</span>
-                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest italic text-sm text-slate-500">Fog Scenario Port Calibration</span>
+                <span class="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Version 4.8.6</span>
+                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest italic text-sm text-slate-500">Player 2 Contrast & Scenario Sync</span>
             </div>
             <h1 class="text-4xl font-black text-slate-900 tracking-tighter text-slate-900">Catan Fair Generator <span class="text-orange-500 underline decoration-4 underline-offset-4">PRO</span></h1>
         </div>
@@ -136,7 +140,7 @@
                         <div class="animate-spin rounded-full h-24 w-24 border-b-4 border-orange-500"></div>
                         <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-orange-600 uppercase">CALC</div>
                     </div>
-                    <p class="mt-6 text-sm font-black text-slate-800 uppercase tracking-widest animate-pulse text-center">Kalibracja mapy...</p>
+                    <p class="mt-6 text-sm font-black text-slate-800 uppercase tracking-widest animate-pulse text-center">Optymalizacja mapy...</p>
                 </div>
 
                 <div id="mapContainer" class="w-full h-full">
@@ -166,7 +170,7 @@
         </div>
         <button onclick="window.app.closeModal()" class="p-4 hover:bg-slate-100 rounded-2xl transition-all"><svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
-    <div id="modalContent" class="p-8 space-y-8 flex-1"></div>
+    <div id="modalContent" class="p-8 space-y-8 flex-1 text-slate-900"></div>
 </div>
 
 <script>
@@ -216,7 +220,7 @@
         },
         islands: {
             3: { layout: ["wwmm", "mmwmm", "mmwmmw", "wwwwwww", "mmmwmm", "mmwmm", "mwww"], resources: {clay:4, forest:4, sheep:4, wheat:4, ore:4}, numbers: [2, 3,3, 4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10, 11,11, 12], ports: [{q:3, r:-2, e:5, t:'any'}, {q:-2, r:-1, e:4, t:'any'}, {q:0, r:-2, e:1, t:'ore'}, {q:2, r:-1, e:2, t:'clay'}, {q:-3, r:1, e:5, t:'forest'}, {q:-3, r:1, e:2, t:'any'}, {q:2, r:1, e:1, t:'wheat'}, {q:-2, r:2, e:1, t:'sheep'}, {q:0, r:2, e:4, t:'any'}] },
-            4: { layout: ["mwmm", "mwmmm", "mmwmmw", "wwwmwww", "mmwwmm", "mmmwm", "mmwm"], resources: {clay:4, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10, 10, 11,11, 11, 12], ports: [{q:-1, r:-2, e:3, t:'wheat'}, {q:3, r:-2, e:1, t:'forest'}, {q:-2, r:-1, e:1, t:'any'}, {q:0, r:0, e:4, t:'any'}, {q:-3, r:1, e:2, t:'clay'}, {q:2, r:1, e:4, t:'ore'}, {q:2, r:1, e:1, t:'any'}, {q:-2, r:2, e:5, t:'any'}, {q:-3, r:3, e:3, t:'sheep'}] },
+            4: { layout: ["mwmm", "mwmmm", "mmwmmw", "wwwmwww", "mmwwmm", "mmmwm", "mmwm"], resources: {clay:4, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10,10, 11,11,11, 12], ports: [{q:-1, r:-2, e:3, t:'wheat'}, {q:3, r:-2, e:1, t:'forest'}, {q:-2, r:-1, e:1, t:'any'}, {q:0, r:0, e:4, t:'any'}, {q:-3, r:1, e:2, t:'clay'}, {q:2, r:1, e:4, t:'ore'}, {q:2, r:1, e:1, t:'any'}, {q:-2, r:2, e:5, t:'any'}, {q:-3, r:3, e:3, t:'sheep'}] },
             5: {
                 layout: ["mmwmwmm", "mmwmmwmm", "mmwmmwwmw", "wwwwwwwwww", "wmwwmmwmm", "mmwmmwmm", "mmwmwmm"],
                 resources: {clay:6, forest:7, sheep:7, wheat:6, ore:6},
@@ -397,7 +401,7 @@
             const placeWithSpacing = (tilesToFill, pool) => {
                 const remaining = [...pool];
                 this.shuffle(remaining);
-                for (let attempt = 0; attempt < 50; attempt++) {
+                for (let attempt = 0; attempt < 100; attempt++) {
                     const localPool = [...remaining];
                     let conflict = false;
                     for (let i = 0; i < tilesToFill.length; i++) {
@@ -519,7 +523,9 @@
                 candidates.sort((a, b) => b.totalPP - a.totalPP);
                 const best = candidates[0]; best.owner = players[pIdx].id;
                 players[pIdx].pp += best.totalPP; players[pIdx].settlements.push(best); taken.add(best);
-                const rNode = best.neighbors.find(nn => !Array.from(taken).some(t => Math.hypot(nn.x-t.x, nn.y-t.y) < 10));
+
+                // Szukaj optymalnego węzła na drogę, jeśli nie ma wolnego, weź pierwszego lepszego
+                const rNode = best.neighbors.find(nn => !Array.from(taken).some(t => Math.hypot(nn.x-t.x, nn.y-t.y) < 10)) || best.neighbors[0];
                 if (rNode) roads.push({ n1: best, n2: rNode, owner: players[pIdx].id });
             }
             const pps = players.map(p => p.pp);
@@ -712,7 +718,7 @@
                 </div>`);
         }
 
-        showPortDetails(p) { this.openModal("Szczegóły Portu", `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${p.type==='any'?'#1e293b':COLORS[p.type]}"><div class="text-6xl font-black mb-2 tracking-tighter text-white">${p.type==='any'?'3:1':'2:1'}</div><div class="font-bold opacity-70 italic uppercase tracking-widest text-center text-white">${RESOURCE_LABELS[p.type]}</div></div><p class="text-slate-500 font-medium text-center mt-4 px-4 text-xs">Pozwala na wymianę surowców w stosunku ${p.type==='any'?'3 do 1':'2 do 1 dla ' + RESOURCE_LABELS[p.type]} w banku.</p>`); }
+        showPortDetails(p) { this.openModal("Szczegóły Portu", `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${p.type==='any'?'#1e293b':COLORS[p.type]}"><div class="text-6xl font-black mb-2 tracking-tighter text-white">${p.type==='any'?'3:1':'2:1'}</div><div class="font-bold opacity-70 italic uppercase tracking-widest text-center text-white">${RESOURCE_LABELS[p.type]}</div></div><p class="text-slate-500 font-medium text-center mt-4 px-4 text-xs text-slate-400 text-slate-400">Pozwala na wymianę surowców w stosunku ${p.type==='any'?'3 do 1':'2 do 1 dla ' + RESOURCE_LABELS[p.type]} w banku.</p>`); }
         openModal(t, c) { document.getElementById('modalTitle').textContent = t; document.getElementById('modalContent').innerHTML = c; document.body.classList.add('modal-open'); document.getElementById('modalOverlay').classList.remove('hidden'); setTimeout(()=>document.getElementById('modalOverlay').classList.add('opacity-100'), 10); }
         closeModal() { document.body.classList.remove('modal-open'); document.getElementById('modalOverlay').classList.remove('opacity-100'); setTimeout(()=>document.getElementById('modalOverlay').classList.add('hidden'), 300); }
         shuffle(a) { for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
