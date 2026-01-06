@@ -6,94 +6,145 @@
     <title>Catan Fair Generator Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .hex-path { stroke: #222; stroke-width: 1.5; }
+        .hex-path { stroke: rgba(0,0,0,0.15); stroke-width: 1; transition: fill 0.3s; cursor: pointer; }
         .hex-label { pointer-events: none; user-select: none; font-weight: 900; font-size: 14px; }
-        .node-marker { cursor: pointer; }
+        .node-marker { cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .road-line { stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
 
-        .player-1 { fill: #2563eb; stroke: #1e3a8a; stroke-width: 2; }
-        .player-2 { fill: #facc15; stroke: #a16207; stroke-width: 2; }
-        .player-3 { fill: #ef4444; stroke: #991b1b; stroke-width: 2; }
-        .player-4 { fill: #ffffff; stroke: #94a3b8; stroke-width: 2; }
-        .player-5 { fill: #16a34a; stroke: #14532d; stroke-width: 2; }
-        .player-6 { fill: #78350f; stroke: #451a03; stroke-width: 2; }
+        /* Kolory Graczy */
+        .player-1 { fill: #2563eb; stroke: #1e3a8a; } .road-1 { stroke: #2563eb; } .border-player-1 { border-color: #2563eb; }
+        .player-2 { fill: #facc15; stroke: #a16207; } .road-2 { stroke: #facc15; } .border-player-2 { border-color: #facc15; }
+        .player-3 { fill: #ef4444; stroke: #991b1b; } .road-3 { stroke: #ef4444; } .border-player-3 { border-color: #ef4444; }
+        .player-4 { fill: #ffffff; stroke: #94a3b8; } .road-4 { stroke: #ffffff; } .border-player-4 { border-color: #94a3b8; }
+        .player-5 { fill: #16a34a; stroke: #14532d; } .road-5 { stroke: #16a34a; } .border-player-5 { border-color: #16a34a; }
+        .player-6 { fill: #9333ea; stroke: #581c87; } .road-6 { stroke: #9333ea; } .border-player-6 { border-color: #9333ea; }
 
         .player-text-4 { fill: #1e293b !important; }
 
         .port-line { stroke: #334155; stroke-width: 7; stroke-linecap: round; }
-        .port-bg { fill: #334155; stroke: white; stroke-width: 2; }
-        .port-label { font-size: 11px; font-weight: 900; fill: white; pointer-events: none; }
+        .port-bg {
+            stroke: white;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: transform 0.2s ease-out;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+        .port-bg:hover { transform: scale(1.25); }
+        .port-label { font-size: 10px; font-weight: 900; pointer-events: none; }
 
-        #mapCanvas { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+        #mapContainer { cursor: grab; overflow: hidden; touch-action: none; background: #0077b6; }
+        #mapContainer:active { cursor: grabbing; }
+
         .settlement-badge { font-size: 9px; font-weight: 800; fill: #1e293b; paint-order: stroke; stroke: white; stroke-width: 2px; pointer-events: none; }
+
+        input[type=range] { accent-color: #f97316; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        #sideModal { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal-open #sideModal { transform: translateX(0); }
+        #modalOverlay { transition: opacity 0.3s ease; }
+
+        /* Pionki */
+        .robber-icon { fill: #475569; stroke: #1e293b; stroke-width: 1.5; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); pointer-events: none; }
+        .pirate-icon { fill: #0f172a; stroke: white; stroke-width: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); pointer-events: none; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900 overflow-x-hidden">
 
 <div class="max-w-7xl mx-auto p-4 md:p-6">
     <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-3xl font-black text-slate-800 tracking-tight">Catan Fair Generator <span class="text-orange-500">PRO</span></h1>
-            <p class="text-slate-500 text-sm">Oficjalne układy rzędowe i precyzyjne pule numerów</p>
+            <p class="text-slate-500 text-sm italic font-medium">V4.5.3 • Poprawka restrykcji wyspy i dróg na lądzie</p>
         </div>
-        <div class="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest">
-            V4.1.4 STABLE GRID 5-6
+        <div class="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">
+            GRID ENGINE STABLE
         </div>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Panel Sterowania -->
         <div class="lg:col-span-3 space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
                 <div>
-                    <label class="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Liczba graczy</label>
-                    <select id="playerCount" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none">
-                        <option value="3">3 Graczy</option>
-                        <option value="4" selected>4 Graczy</option>
-                        <option value="5">5 Graczy</option>
-                        <option value="6">6 Graczy</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Scenariusz</label>
-                    <select id="scenario" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none">
-                        <option value="base">Gra Podstawowa</option>
-                        <option value="shores" selected>Żeglarze: Nowe Lądy</option>
-                    </select>
-                </div>
-
-                <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="strictRules" checked class="w-4 h-4 text-orange-500 rounded focus:ring-orange-500">
-                        <label for="strictRules" class="text-xs font-bold text-slate-600">Zasada 6/8</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Ustawienia gry</label>
+                    <div class="space-y-3">
+                        <select id="playerCount" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-sm">
+                            <option value="3">3 Graczy</option>
+                            <option value="4" selected>4 Graczy</option>
+                            <option value="5">5 Graczy</option>
+                            <option value="6">6 Graczy</option>
+                        </select>
+                        <select id="scenario" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-sm">
+                            <option value="base">Gra Podstawowa</option>
+                            <option value="shores">Żeglarze: Nowe Lądy</option>
+                            <option value="islands" selected>Wyspy (4 wyspy / 6 wysp)</option>
+                        </select>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="showValues" checked class="w-4 h-4 text-orange-500 rounded focus:ring-orange-500">
-                        <label for="showValues" class="text-xs font-bold text-slate-600">Wartości na mapie</label>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Zasady & Widoczność</label>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" id="strictRules" checked class="w-5 h-5 text-orange-500 rounded-lg border-slate-300 focus:ring-orange-500">
+                            <span class="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Balans (6/8, Desert, PP)</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" id="showRoads" checked class="w-5 h-5 text-orange-500 rounded-lg border-slate-300 focus:ring-orange-500">
+                            <span class="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Pokaż drogi startowe</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" id="showValues" checked class="w-5 h-5 text-orange-500 rounded-lg border-slate-300 focus:ring-orange-500">
+                            <span class="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors">Wartości na mapie</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Zoom Mapy</label>
+                    <div class="flex items-center gap-4">
+                        <input type="range" id="zoomSlider" min="0.4" max="2" step="0.1" value="1" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer">
                     </div>
                 </div>
 
                 <button id="generateBtn" class="w-full bg-slate-800 hover:bg-black text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 uppercase tracking-widest text-sm">
-                    Generuj Mapę
+                    Generuj Układ
                 </button>
             </div>
 
-            <div id="statsPanel" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 max-h-[600px] overflow-y-auto">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2">Analiza Balansu:</h3>
+            <div id="statsPanel" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 max-h-[600px] overflow-y-auto scrollbar-hide">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2">Analiza Produkcji:</h3>
                 <div id="playerStats" class="space-y-4"></div>
             </div>
         </div>
 
-        <div class="lg:col-span-9 bg-slate-200/50 rounded-3xl p-2 md:p-8 flex items-center justify-center min-h-[700px] relative border-2 border-dashed border-slate-300 overflow-hidden text-center">
+        <div class="lg:col-span-9 bg-slate-200/50 rounded-3xl p-1 flex items-center justify-center min-h-[600px] lg:min-h-[780px] relative border-2 border-dashed border-slate-300 overflow-hidden shadow-inner">
             <div id="loadingOverlay" class="absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center hidden backdrop-blur-sm">
                 <div class="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mb-4"></div>
-                <p class="text-lg font-black text-slate-800 uppercase tracking-tighter">Układanie kafelków rzędowych...</p>
+                <p class="text-lg font-black text-slate-800 uppercase tracking-tighter text-center">Szukanie idealnego lądu...</p>
             </div>
-            <svg id="mapCanvas" class="w-full h-full"></svg>
+
+            <div id="mapContainer" class="w-full h-full flex items-center justify-center">
+                <svg id="mapCanvas" class="w-full h-full transition-transform duration-75 ease-out"></svg>
+            </div>
         </div>
     </div>
+</div>
 
-    <div id="detailPanel" class="mt-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
-        <div id="nodeInfo" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
+<!-- SIDE MODAL -->
+<div id="modalOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] hidden opacity-0" onclick="window.app.closeModal()"></div>
+<div id="sideModal" class="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-[101] transform translate-x-full overflow-y-auto flex flex-col">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <h2 id="modalTitle" class="text-xl font-black text-slate-800 uppercase tracking-tight">Szczegóły</h2>
+        <button onclick="window.app.closeModal()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div id="modalContent" class="p-6 space-y-6 flex-1"></div>
+    <div class="p-6 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+        Catan Engine v4.5.3
     </div>
 </div>
 
@@ -103,317 +154,199 @@
      */
     const SCENARIOS = {
         base: {
-            3: {
-                land: (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= 2,
-                resources: {forest:4, wheat:4, sheep:4, clay:3, ore:3, desert:1},
-                numbers: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12],
-                ports: [
-                    {q:0, r:-2, e:4, t:'any'}, {q:1, r:-2, e:5, t:'wheat'},
-                    {q:-1, r:-1, e:3, t:'forest'}, {q:2, r:-1, e:5, t:'ore'},
-                    {q:2, r:0, e:0, t:'any'}, {q:-2, r:1, e:3, t:'clay'},
-                    {q:1, r:1, e:1, t:'sheep'}, {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'any'}
-                ]
-            },
-            4: {
-                land: (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= 2,
-                resources: {forest:4, wheat:4, sheep:4, clay:3, ore:3, desert:1},
-                numbers: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12],
-                ports: [
-                    {q:0, r:-2, e:4, t:'any'}, {q:1, r:-2, e:5, t:'wheat'},
-                    {q:-1, r:-1, e:3, t:'forest'}, {q:2, r:-1, e:5, t:'ore'},
-                    {q:2, r:0, e:0, t:'any'}, {q:-2, r:1, e:3, t:'clay'},
-                    {q:1, r:1, e:1, t:'sheep'}, {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'any'}
-                ]
-            },
-            5: {
-                land: (q, r) => {
-                    // Skorygowany i wycentrowany układ podstawowy 5-6 (3-4-5-6-5-4-3)
-                    if (r === 2)  return q >= -2 && q <= 0;
-                    if (r === 1)  return q >= -2 && q <= 1;
-                    if (r === 0)  return q >= -2 && q <= 2;
-                    if (r === -1) return q >= -2 && q <= 3;
-                    if (r === -2) return q >= -1 && q <= 3;
-                    if (r === -3) return q >= 0 && q <= 3;
-                    if (r === -4) return q >= 1 && q <= 3;
-                    return false;
-                },
-                resources: {forest:6, wheat:6, sheep:6, clay:5, ore:5, desert:2},
-                numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,9, 10,10,10,10, 11,11,11,11, 12,12,12],
-                ports: [
-                    {q:1, r:-4, e:4, t:'any'}, {q:2, r:-4, e:5, t:'sheep'},
-                    {q:3, r:-3, e:5, t:'any'}, {q:-1, r:-2, e:3, t:'ore'},
-                    {q:3, r:-1, e:0, t:'any'}, {q:-2, r:-0, e:3, t:'sheep'},
-                    {q:2, r:0, e:1, t:'clay'}, {q:-2, r:1, e:3, t:'wheat'},
-                    {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'forest'},
-                    {q:0, r:2, e:0, t:'any'}
-                ]
-            }
+            3: { land: (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= 2, resources: {forest:4, wheat:4, sheep:4, clay:3, ore:3, desert:1}, numbers: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12], ports: [{q:0, r:-2, e:4, t:'any'}, {q:1, r:-2, e:5, t:'wheat'}, {q:-1, r:-1, e:3, t:'forest'}, {q:2, r:-1, e:5, t:'ore'}, {q:2, r:0, e:0, t:'any'}, {q:-2, r:1, e:3, t:'clay'}, {q:1, r:1, e:1, t:'sheep'}, {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'any'}] },
+            4: { land: (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= 2, resources: {forest:4, wheat:4, sheep:4, clay:3, ore:3, desert:1}, numbers: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12], ports: [{q:0, r:-2, e:4, t:'any'}, {q:1, r:-2, e:5, t:'wheat'}, {q:-1, r:-1, e:3, t:'forest'}, {q:2, r:-1, e:5, t:'ore'}, {q:2, r:0, e:0, t:'any'}, {q:-2, r:1, e:3, t:'clay'}, {q:1, r:1, e:1, t:'sheep'}, {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'any'}] },
+            5: { land: (q, r) => { if (r === 2) return q >= -2 && q <= 0; if (r === 1) return q >= -2 && q <= 1; if (r === 0) return q >= -2 && q <= 2; if (r === -1) return q >= -2 && q <= 3; if (r === -2) return q >= -1 && q <= 3; if (r === -3) return q >= 0 && q <= 3; if (r === -4) return q >= 1 && q <= 3; return false; }, resources: {forest:6, wheat:6, sheep:6, clay:5, ore:5, desert:2}, numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,9, 10,10,10,10, 11,11,11,11, 12,12,12], ports: [{q:1, r:-4, e:4, t:'any'}, {q:2, r:-4, e:5, t:'sheep'}, {q:3, r:-3, e:5, t:'any'}, {q:-1, r:-2, e:3, t:'ore'}, {q:3, r:-1, e:0, t:'any'}, {q:-2, r:-0, e:3, t:'sheep'}, {q:2, r:0, e:1, t:'clay'}, {q:-2, r:1, e:3, t:'wheat'}, {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'forest'}, {q:0, r:2, e:0, t:'any'}] }
         },
         shores: {
-            3: {
-                playable: (q, r) => {
-                    const starts = { "-3":0, "-2":-1, "-1":-2, "0":-3, "1":-3, "2":-3, "3":-3 };
-                    const lengths = { "-3":4, "-2":5, "-1":6, "0":7, "1":6, "2":5, "3":4 };
-                    return r >= -3 && r <= 3 && q >= starts[r] && q < starts[r] + lengths[r];
-                },
-                land: (q, r) => {
-                    const starts = { "-3":0, "-2":-1, "-1":-2, "0":-3, "1":-3, "2":-3, "3":-3 };
-                    const idx = q - starts[r] + 1;
-                    if (r === -3) return idx === 1 || idx === 2;
-                    if (r === -2) return idx === 4 || idx === 5;
-                    if (r === -1) return idx === 2 || idx === 3 || idx === 5;
-                    if (r === 0)  return idx === 2 || idx === 3 || idx === 4 || idx === 6;
-                    if (r === 1)  return idx >= 1 && idx <= 4;
-                    if (r === 2)  return (idx >= 1 && idx <= 3) || idx === 5;
-                    if (r === 3)  return (idx >= 1 && idx <= 2) || idx === 4;
-                    return false;
-                },
+            3: { land: (q, r) => { const starts = { "-3":0, "-2":-1, "-1":-2, "0":-3, "1":-3, "2":-3, "3":-3 }; const lengths = { "-3":4, "-2":5, "-1":6, "0":7, "1":6, "2":5, "3":4 }; const idx = q - starts[r] + 1; if (r === -3) return idx === 1 || idx === 2; if (r === -2) return idx === 4 || idx === 5; if (r === -1) return idx === 2 || idx === 3 || idx === 5; if (r === 0) return idx === 2 || idx === 3 || idx === 4 || idx === 6; if (r === 1) return idx >= 1 && idx <= 4; if (r === 2) return (idx >= 1 && idx <= 3) || idx === 5; if (r === 3) return (idx >= 1 && idx <= 2) || idx === 4; return false; }, mainIsland: (q, r) => { const starts = { "-3":0, "-2":-1, "-1":-2, "0":-3, "1":-3, "2":-3, "3":-3 }; const idx = q - starts[r] + 1; if (r === -1) return idx === 2 || idx === 3; if (r === 0) return idx >= 2 && idx <= 4; if (r === 1) return idx >= 1 && idx <= 4; if (r === 2) return idx >= 1 && idx <= 3; if (r === 3) return idx >= 1 && idx <= 2; return false; }, resources: {forest:3, wheat:4, sheep:5, clay:4, ore:4, gold:2}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8,8, 9,9, 10,10,10, 11,11, 12], ports: [{q:-1, r:-1, e:3, t:'wheat'}, {q:0, r:-1, e:0, t:'any'}, {q:-3, r:1, e:4, t:'ore'}, {q:-3, r:1, e:2, t:'any'}, {q:0, r:1, e:5, t:'sheep'}, {q:-3, r:3, e:3, t:'clay'}, {q:-2, r:3, e:2, t:'forest'}, {q:-2, r:3, e:0, t:'any'}] },
+            4: { land: (q, r) => { const smallIslands = ["2,-3", "2,-2", "3,-2", "2,-1", "2,0"]; if (smallIslands.includes(`${q},${r}`)) return true; const starts = { "-3":-1, "-2":-2, "-1":-3, "0":-4, "1":-4, "2":-4, "3":-4 }; const idx = q - starts[r] + 1; if (r === -3) return idx === 1 || idx === 2 || idx === 4; if (r === -2) return idx === 5 || idx === 6; if (r === -1) return (idx >= 2 && idx <= 4) || idx === 6; if (r === 0) return (idx >= 2 && idx <= 5) || idx === 7; if (r === 1) return idx >= 1 && idx <= 5; if (r === 2) return (idx >= 1 && idx <= 4) || idx === 6; if (r === 3) return (idx >= 1 && idx <= 3) || idx === 5; return false; }, mainIsland: (q, r) => { const excluded = ["2,-3", "2,-2", "3,-2", "2,-1", "2,0"]; if (excluded.includes(`${q},${r}`)) return false; const starts = { "-3":-1, "-2":-2, "-1":-3, "0":-4, "1":-4, "2":-4, "3":-4 }; const idx = q - starts[r] + 1; if (r === -1) return idx >= 2 && idx <= 4; if (r === 0) return idx >= 2 && idx <= 5; if (r === 1) return idx >= 1 && idx <= 5; if (r === 2) return idx >= 1 && idx <= 4; if (r === 3) return idx >= 1 && idx <= 3; return false; }, resources: {forest:5, wheat:5, sheep:5, clay:5, ore:4, gold:2, desert:1}, numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12], ports: [{q:-2, r:-1, e:3, t:'any'}, {q:0, r:-1, e:4, t:'ore'}, {q:0, r:0, e:5, t:'any'}, {q:-4, r:1, e:4, t:'sheep'}, {q:-4, r:1, e:2, t:'clay'}, {q:0, r:1, e:1, t:'wheat'}, {q:-4, r:3, e:3, t:'any'}, {q:-3, r:3, e:2, t:'forest'}, {q:-2, r:3, e:0, t:'any'}] },
+            5: { land: (q, r) => { if ((q === 1 && r === 2) || (q === 0 && r === 3)) return false; if ((q === 2 && r === -1) || (q === 2 && r === 0)) return true; const starts = { "-3":-2, "-2":-3, "-1":-4, "0":-5, "1":-5, "2":-5, "3":-5 }; const lengths = { "-3":7, "-2":8, "-1":9, "0":10, "1":9, "2":8, "3":7 }; const idx = q - starts[r] + 1; if (r === -3) return idx === 1 || idx === 7 || (idx >= 3 && idx <= 5); if (r === -2) return idx === 1 || (idx >= 3 && idx <= 6); if (r === -1) return idx === 1 || idx === 9 || (idx >= 3 && idx <= 7); if (r === 0) return idx >= 3 && idx <= 8; if (r === 1) return idx === 1 || idx === 9 || (idx >= 3 && idx <= 7); if (r === 2) return idx === 1 || (idx >= 3 && idx <= 6); if (r === 3) return idx === 1 || idx === 7 || (idx >= 3 && idx <= 5); return false; },
                 mainIsland: (q, r) => {
-                    const starts = { "-3":0, "-2":-1, "-1":-2, "0":-3, "1":-3, "2":-3, "3":-3 };
-                    const idx = q - starts[r] + 1;
-                    if (r === -1) return idx === 2 || idx === 3;
-                    if (r === 0)  return idx >= 2 && idx <= 4;
-                    if (r === 1)  return idx >= 1 && idx <= 4;
-                    if (r === 2)  return idx >= 1 && idx <= 3;
-                    if (r === 3)  return idx >= 1 && idx <= 2;
-                    return false;
-                },
-                resources: {forest:3, wheat:4, sheep:5, clay:4, ore:4, gold:2},
-                numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8,8, 9,9, 10,10,10, 11,11, 12],
-                ports: [
-                    {q:-1, r:-1, e:3, t:'wheat'}, {q:0, r:-1, e:0, t:'any'},
-                    {q:-3, r:1, e:4, t:'ore'}, {q:-3, r:1, e:2, t:'any'},
-                    {q:0, r:1, e:5, t:'sheep'}, {q:-3, r:3, e:3, t:'clay'},
-                    {q:-2, r:3, e:2, t:'forest'}, {q:-2, r:3, e:0, t:'any'}
-                ]
-            },
-            4: {
-                playable: (q, r) => {
-                    const starts = { "-3":-1, "-2":-2, "-1":-3, "0":-4, "1":-4, "2":-4, "3":-4 };
-                    const lengths = { "-3":5, "-2":6, "-1":7, "0":8, "1":7, "2":6, "3":5 };
-                    return r >= -3 && r <= 3 && q >= starts[r] && q < starts[r] + lengths[r];
-                },
-                land: (q, r) => {
-                    // Corrections: explicitly include land from user request
-                    const lands = ["0,0", "2,-3", "2,-2", "3,-2", "2,-1", "2,0"];
-                    if (lands.includes(`${q},${r}`)) return true;
-
-                    const starts = { "-3":-1, "-2":-2, "-1":-3, "0":-4, "1":-4, "2":-4, "3":-4 };
-                    const idx = q - starts[r] + 1;
-                    if (r === -3) return idx === 1 || idx === 2 || idx === 4;
-                    if (r === -2) return idx === 5 || idx === 6;
-                    if (r === -1) return (idx >= 2 && idx <= 4) || idx === 6;
-                    if (r === 0)  return (idx >= 2 && idx <= 4) || idx === 7;
-                    if (r === 1)  return idx >= 1 && idx <= 5;
-                    if (r === 2)  return (idx >= 1 && idx <= 4) || idx === 6;
-                    if (r === 3)  return (idx >= 1 && idx <= 3) || idx === 5;
-                    return false;
-                },
-                mainIsland: (q, r) => {
-                    const starts = { "-3":-1, "-2":-2, "-1":-3, "0":-4, "1":-4, "2":-4, "3":-4 };
-                    const idx = q - starts[r] + 1;
-                    const lands = ["0,0", "2,-3", "2,-2", "3,-2", "2,-1", "2,0"];
-                    if (lands.includes(`${q},${r}`)) return true;
-                    if (r === -1) return idx >= 2 && idx <= 4;
-                    if (r === 0)  return idx >= 2 && idx <= 4;
-                    if (r === 1)  return idx >= 1 && idx <= 5;
-                    if (r === 2)  return idx >= 1 && idx <= 4;
-                    if (r === 3)  return idx >= 1 && idx <= 3;
-                    return false;
-                },
-                resources: {forest:5, wheat:5, sheep:5, clay:5, ore:5, gold:2, desert:1},
-                numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12],
-                ports: [
-                    {q:-2, r:-1, e:3, t:'any'}, {q:0, r:-1, e:4, t:'ore'}, {q:0, r:0, e:5, t:'any'},
-                    {q:-4, r:1, e:4, t:'sheep'}, {q:-4, r:1, e:2, t:'clay'}, {q:0, r:1, e:1, t:'wheat'},
-                    {q:-4, r:3, e:3, t:'any'}, {q:-3, r:3, e:2, t:'forest'}, {q:-2, r:3, e:0, t:'any'}
-                ]
-            },
-            5: {
-                playable: (q, r) => {
-                    const starts = { "-3":-2, "-2":-3, "-1":-4, "0":-5, "1":-5, "2":-5, "3":-5 };
-                    const lengths = { "-3":7, "-2":8, "-1":9, "0":10, "1":9, "2":8, "3":7 };
-                    return r >= -3 && r <= 3 && q >= starts[r] && q < starts[r] + lengths[r];
-                },
-                land: (q, r) => {
-                    if (q === 1 && r === 2) return false;
-                    if (q === 0 && r === 3) return false;
-                    if (q === 2 && r === -1) return true;
-                    if (q === 2 && r === 0) return true;
-
+                    // JAWNE WYKLUCZENIA WYSZPY GŁÓWNEJ (Nowe Lądy 5-6 os.)
+                    const excluded = ["-2,-3", "4,-3", "-3,-2", "-4,-1", "4,-1", "-5,1", "3,1", "-5,2", "-5,3", "1,3", "1,2", "0,3"];
+                    if (excluded.includes(`${q},${r}`)) return false;
+                    if ((q === 2 && r === -1) || (q === 2 && r === 0)) return true;
                     const starts = { "-3":-2, "-2":-3, "-1":-4, "0":-5, "1":-5, "2":-5, "3":-5 };
                     const idx = q - starts[r] + 1;
-                    if (r === -3) return idx === 1 || idx === 7 || (idx >= 3 && idx <= 5);
-                    if (r === -2) return idx === 1 || (idx >= 3 && idx <= 6);
-                    if (r === -1) return idx === 1 || idx === 9 || (idx >= 3 && idx <= 7);
-                    if (r === 0)  return idx >= 3 && idx <= 8;
-                    if (r === 1)  return idx === 1 || idx === 9 || (idx >= 3 && idx <= 7);
-                    if (r === 2)  return idx === 1 || (idx >= 3 && idx <= 6);
-                    if (r === 3)  return idx === 1 || idx === 7 || (idx >= 3 && idx <= 5);
-                    return false;
-                },
-                mainIsland: (q, r) => {
-                    const starts = { "-3":-2, "-2":-3, "-1":-4, "0":-5, "1":-5, "2":-5, "3":-5 };
-                    const idx = q - starts[r] + 1;
-                    if (q === 2 && r === -1) return true;
-                    if (q === 2 && r === 0) return true;
                     return idx >= 3 && idx <= 8;
                 },
                 resources: {forest:7, wheat:7, sheep:7, clay:7, ore:7, gold:3, desert:2},
                 numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,9, 10,10,10,10, 11,11,11,11, 12,12,12],
                 randomPorts: true,
-                portLocations: [
-                    {q:1, r:-3, e:5}, {q:-1, r:-2, e:4}, {q:2, r:-2, e:5}, {q:-2, r:-1, e:3},
-                    {q:2, r:-1, e:0}, {q:-3, r:0, e:2}, {q:2, r:0, e:1}, {q:-3, r:2, e:2},
-                    {q:0, r:2, e:0}, {q:-2, r:3, e:2}, {q:-1, r:3, e:1}
-                ]
+                portLocations: [{q:1, r:-3, e:5}, {q:-1, r:-2, e:4}, {q:2, r:-2, e:5}, {q:-2, r:-1, e:3}, {q:2, r:-1, e:0}, {q:-3, r:0, e:2}, {q:2, r:0, e:1}, {q:-3, r:2, e:2}, {q:0, r:2, e:0}, {q:-2, r:3, e:2}, {q:-1, r:3, e:1}]
             }
+        },
+        islands: {
+            3: { layout: ["wwll", "llwll", "llwllw", "wwwwwww", "lllwll", "llwll", "lwww"], resources: {clay:4, forest:4, sheep:4, wheat:4, ore:4}, numbers: [2, 5,5,5, 9,9,9, 12, 3,3, 4,4, 6,6, 8,8, 10,10, 11,11], ports: [{q:3, r:-2, e:5, t:'any'}, {q:-2, r:-1, e:4, t:'any'}, {q:0, r:-2, e:1, t:'ore'}, {q:2, r:-1, e:2, t:'clay'}, {q:-3, r:1, e:5, t:'forest'}, {q:-3, r:1, e:2, t:'any'}, {q:2, r:1, e:1, t:'wheat'}, {q:-2, r:2, e:1, t:'sheep'}, {q:0, r:2, e:4, t:'any'}] },
+            4: { layout: ["lwll", "lwlll", "llwllw", "wwwlwww", "llwwll", "lllwl", "llwl"], resources: {clay:4, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 6,6, 8,8, 12, 4,4,4, 5,5,5, 9,9,9, 10,10,10, 11,11,11], ports: [{q:-1, r:-2, e:3, t:'wheat'}, {q:3, r:-2, e:1, t:'forest'}, {q:-2, r:-1, e:1, t:'any'}, {q:0, r:0, e:4, t:'any'}, {q:-3, r:1, e:2, t:'clay'}, {q:2, r:1, e:4, t:'ore'}, {q:2, r:1, e:1, t:'any'}, {q:-2, r:2, e:5, t:'any'}, {q:-3, r:3, e:3, t:'sheep'}] },
+            5: { layout: ["llwlwll", "llwllwll", "llwllwwlw", "wwwwwwwwww", "wlwwllwll", "llwllwll", "llwlwll"], resources: {clay:6, forest:7, sheep:7, wheat:6, ore:6}, numbers: [2,2, 3,3,3, 8,8,8, 11,11, 12,12, 4,4,4,4, 5,5,5,5, 6,6,6,6, 9,9,9,9, 10,10,10,10], randomPortsFromPool: true, portLocations: [{q:0, r:-3, e:4}, {q:2, r:-3, e:5}, {q:5, r:-3, e:5}, {q:-1, r:-2, e:1}, {q:4, r:-2, e:2}, {q:-2, r:-1, e:2}, {q:-4, r:2, e:3}, {q:3, r:2, e:0}, {q:-3, r:3, e:5}, {q:-1, r:2, e:2}, {q:1, r:3, e:2}] }
         }
     };
 
     SCENARIOS.base[6] = SCENARIOS.base[5];
     SCENARIOS.shores[6] = SCENARIOS.shores[5];
+    SCENARIOS.islands[6] = SCENARIOS.islands[5];
 
-    const COLORS = {
-        forest:'#1b4332', clay:'#bc4749', wheat:'#fef08a', sheep:'#94d2bd', ore:'#495057', desert:'#e9c46a',
-        gold:'#ffb703', playableSea: '#00b4d8', borderSea: '#0077b6'
-    };
-
-    const RESOURCE_LABELS = { forest:'Drewno', clay:'Glina', wheat:'Zboże', sheep:'Owce', ore:'Ruda', desert:'Pustynia', gold:'Złoto' };
+    const COLORS = { forest:'#1b4332', clay:'#bc4749', wheat:'#fef08a', sheep:'#94d2bd', ore:'#495057', desert:'#e9c46a', gold:'#ffb703', playableSea: '#00b4d8', borderSea: '#0077b6' };
+    const RESOURCE_LABELS = { forest:'Drewno', clay:'Glina', wheat:'Zboże', sheep:'Owce', ore:'Ruda', desert:'Pustynia', gold:'Złoto', any: 'Wszystko' };
     const PP_MAP = { 0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1 };
 
     class CatanGenerator {
         constructor() {
             this.svg = document.getElementById('mapCanvas');
+            this.container = document.getElementById('mapContainer');
             this.btn = document.getElementById('generateBtn');
             this.loading = document.getElementById('loadingOverlay');
-            this.hexes = []; this.nodes = []; this.ports = [];
+            this.zoomSlider = document.getElementById('zoomSlider');
+            this.hexes = []; this.nodes = []; this.ports = []; this.roads = [];
+            this.scale = 1; this.translateX = 0; this.translateY = 0;
+            this.isPanning = false; this.startPoint = { x: 0, y: 0 };
+            this.initEvents();
+        }
+
+        initEvents() {
             this.btn.addEventListener('click', () => this.generate());
+            this.container.addEventListener('mousedown', (e) => this.onPanStart(e));
+            window.addEventListener('mousemove', (e) => this.onPanMove(e));
+            window.addEventListener('mouseup', () => this.onPanEnd());
+            this.container.addEventListener('wheel', (e) => { e.preventDefault(); const delta = e.deltaY > 0 ? 0.9 : 1.1; this.updateZoom(this.scale * delta); }, { passive: false });
+            this.zoomSlider.addEventListener('input', (e) => this.updateZoom(parseFloat(e.target.value)));
+            ['showRoads', 'showValues'].forEach(id => { document.getElementById(id).addEventListener('change', () => this.updateVisibility()); });
+        }
+
+        onPanStart(e) { this.isPanning = true; this.startPoint = { x: e.clientX - this.translateX, y: e.clientY - this.translateY }; }
+        onPanMove(e) { if (!this.isPanning) return; this.translateX = e.clientX - this.startPoint.x; this.translateY = e.clientY - this.startPoint.y; this.applyTransform(); }
+        onPanEnd() { this.isPanning = false; }
+        updateZoom(val) { this.scale = Math.min(Math.max(val, 0.4), 3); this.zoomSlider.value = this.scale; this.applyTransform(); }
+        applyTransform() { this.svg.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`; }
+
+        openModal(title, content) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalContent').innerHTML = content;
+            document.body.classList.add('modal-open');
+            document.getElementById('modalOverlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('modalOverlay').classList.add('opacity-100'), 10);
+        }
+
+        closeModal() {
+            document.body.classList.remove('modal-open');
+            document.getElementById('modalOverlay').classList.remove('opacity-100');
+            setTimeout(() => document.getElementById('modalOverlay').classList.add('hidden'), 300);
+        }
+
+        updateVisibility() {
+            const rV = document.getElementById('showRoads').checked;
+            const vV = document.getElementById('showValues').checked;
+            document.querySelectorAll('.road-line').forEach(r => r.style.display = rV ? 'block' : 'none');
+            document.querySelectorAll('.settlement-badge').forEach(b => b.style.display = vV ? 'block' : 'none');
         }
 
         generate() {
             this.loading.classList.remove('hidden');
             setTimeout(() => {
+                const pC = parseInt(document.getElementById('playerCount').value);
+                const sK = document.getElementById('scenario').value;
+                const cfg = SCENARIOS[sK]?.[pC] || SCENARIOS[sK]?.all;
                 let attempt = 0;
-                const pCount = parseInt(document.getElementById('playerCount').value);
-                const scenarioKey = document.getElementById('scenario').value;
-                const config = SCENARIOS[scenarioKey]?.[pCount] || SCENARIOS[scenarioKey]?.all;
-
-                while (attempt < 2000) {
-                    this.setupGrid(config);
-                    this.assignResources(config, scenarioKey);
-                    this.assignNumbers(config);
+                while (attempt < 1500) {
+                    this.setupGrid(cfg, sK, pC);
+                    if (!this.assignResources(cfg, sK)) { attempt++; continue; }
+                    if (!this.assignNumbers(cfg)) { attempt++; continue; }
                     this.buildGraph();
-                    this.placePorts(config);
-                    const evalRes = this.evaluateMap(pCount, config);
-
-                    if (evalRes.isFair && evalRes.scoreGap <= 3.8 && evalRes.peGap <= 6.0) {
-                        this.render(evalRes, config);
-                        this.renderStats(evalRes);
-                        break;
-                    }
+                    this.placePorts(cfg);
+                    this.placeBlockers(pC, sK);
+                    const evalRes = this.evaluateMap(pC, cfg, sK);
+                    if (evalRes.isFair) { this.render(evalRes, cfg); this.renderStats(evalRes); this.updateVisibility(); break; }
                     attempt++;
                 }
                 this.loading.classList.add('hidden');
             }, 50);
         }
 
-        setupGrid(config) {
+        setupGrid(cfg, sK, pC) {
             this.hexes = [];
-            const landCoords = [];
-            for (let q = -12; q <= 12; q++) {
-                for (let r = -12; r <= 12; r++) {
-                    if (config.land(q, r)) landCoords.push({q, r});
-                }
-            }
-            const allPossible = new Set();
-            landCoords.forEach(lc => {
-                allPossible.add(`${lc.q},${lc.r}`);
-                const neighbors = [[1,0], [1,-1], [0,-1], [-1,0], [-1,1], [0,1]];
-                neighbors.forEach(d => allPossible.add(`${lc.q + d[0]},${lc.r + d[1]}`));
-            });
-            allPossible.forEach(key => {
-                const [q, r] = key.split(',').map(Number);
-                this.hexes.push({ q, r, resource: 'water', number: 0, isPlayable: config.playable ? config.playable(q, r) : true });
-            });
-        }
+            let pirateCoords = null;
+            if (sK === 'shores') pirateCoords = (pC >= 5) ? { q: 4, r: 0 } : { q: 3, r: 0 };
+            else if (sK === 'islands') pirateCoords = (pC >= 5) ? { q: -4, r: 0 } : { q: -2, r: 4 };
 
-        findIslands(config) {
-            const islands = [];
-            const visited = new Set();
-            const landHexes = this.hexes.filter(h => config.land(h.q, h.r));
-            landHexes.forEach(h => {
-                const key = `${h.q},${h.r}`;
-                if (!visited.has(key)) {
-                    const currentIsland = [];
-                    const qArr = [h];
-                    visited.add(key);
-                    while(qArr.length > 0) {
-                        const curr = qArr.shift();
-                        currentIsland.push(curr);
-                        const neighbors = [[1,0], [1,-1], [0,-1], [-1,0], [-1,1], [0,1]];
-                        neighbors.forEach(d => {
-                            const nKey = `${curr.q+d[0]},${curr.r+d[1]}`;
-                            const nHex = landHexes.find(lh => `${lh.q},${lh.r}` === nKey);
-                            if (nHex && !visited.has(nKey)) {
-                                visited.add(nKey);
-                                qArr.push(nHex);
-                            }
-                        });
-                    }
-                    islands.push(currentIsland);
-                }
-            });
-            return islands;
-        }
-
-        assignResources(config, scenarioKey) {
-            let pool = [];
-            Object.entries(config.resources).forEach(([res, count]) => {
-                for(let i=0; i<count; i++) pool.push(res);
-            });
-            this.shuffle(pool);
-
-            if (scenarioKey === 'shores') {
-                const islands = this.findIslands(config);
-                const smallIslands = islands.filter(isl => isl.length < 5);
-                const mainIslandHexes = this.hexes.filter(h => config.mainIsland(h.q, h.r));
-
-                const goldTotal = config.resources.gold || 0;
-                const otherResources = pool.filter(r => r !== 'gold');
-
-                let goldPlaced = 0;
-                this.shuffle(smallIslands);
-                smallIslands.forEach(isl => {
-                    if (goldPlaced < goldTotal && isl.length > 0) {
-                        this.shuffle(isl);
-                        isl[0].resource = 'gold';
-                        goldPlaced++;
-                        for (let i = 1; i < isl.length; i++) isl[i].resource = otherResources.pop();
-                    } else if (isl.length > 0) {
-                        isl.forEach(h => h.resource = otherResources.pop());
-                    }
+            if (sK === 'islands') {
+                const layout = cfg.layout;
+                const rOffset = Math.floor(layout.length / 2);
+                const tileCoords = new Set();
+                layout.forEach((row, rIdx) => {
+                    const r = rIdx - rOffset;
+                    const qStart = Math.round(-((row.length - 1) / 2) - (r / 2));
+                    row.split('').forEach((char, qIdx) => {
+                        const q = qStart + qIdx;
+                        tileCoords.add(`${q},${r}`);
+                        this.hexes.push({ q, r, resource: char === 'l' ? 'pending' : 'water', number: 0, isTile: true, hasRobber: false, hasPirate: false });
+                    });
                 });
-                mainIslandHexes.forEach(h => {
-                    if (otherResources.length > 0) h.resource = otherResources.pop();
-                });
+                if (pirateCoords && !tileCoords.has(`${pirateCoords.q},${pirateCoords.r}`)) {
+                    this.hexes.push({ q: pirateCoords.q, r: pirateCoords.r, resource: 'water', number: 0, isTile: true, hasRobber: false, hasPirate: false });
+                }
             } else {
-                let landIdx = 0;
-                this.hexes.forEach(h => {
-                    if (config.land(h.q, h.r)) h.resource = pool[landIdx++] || 'water';
+                const landCoords = [];
+                for (let q = -12; q <= 12; q++) { for (let r = -12; r <= 12; r++) { if (cfg.land(q, r)) landCoords.push({q, r}); } }
+                const tileCoords = new Set();
+                landCoords.forEach(lc => {
+                    tileCoords.add(`${lc.q},${lc.r}`);
+                    [[1,0], [1,-1], [0,-1], [-1,0], [-1,1], [0,1]].forEach(d => tileCoords.add(`${lc.q + d[0]},${lc.r + d[1]}`));
+                });
+                if (pirateCoords) tileCoords.add(`${pirateCoords.q},${pirateCoords.r}`);
+                tileCoords.forEach(key => {
+                    const [q, r] = key.split(',').map(Number);
+                    this.hexes.push({ q, r, resource: cfg.land(q, r) ? 'pending' : 'water', number: 0, isTile: true, hasRobber: false, hasPirate: false });
                 });
             }
         }
 
-        assignNumbers(config) {
-            let nums = [...config.numbers];
-            const land = this.hexes.filter(h => config.land(h.q, h.r) && h.resource !== 'water' && h.resource !== 'desert');
-            while (nums.length < land.length) nums.push(Math.floor(Math.random()*9)+2);
-            this.shuffle(nums);
-            land.forEach((h, i) => h.number = nums[i]);
+        assignResources(cfg, sK) {
+            let pool = []; Object.entries(cfg.resources).forEach(([res, count]) => { for(let i=0; i<count; i++) pool.push(res); });
+            this.shuffle(pool);
+            const pending = this.hexes.filter(h => h.resource === 'pending');
+            if (sK === 'shores') {
+                const islands = this.findIslands(cfg);
+                const oR = pool.filter(r => r !== 'gold');
+                let gP = 0; const sI = islands.filter(isl => isl.length < 6);
+                this.shuffle(sI);
+                sI.forEach(isl => {
+                    if (gP < (cfg.resources.gold || 0) && isl.length > 0) {
+                        isl[0].resource = 'gold'; gP++;
+                        for (let i = 1; i < isl.length; i++) isl[i].resource = oR.pop() || 'desert';
+                    } else { isl.forEach(h => h.resource = oR.pop() || 'desert'); }
+                });
+                this.hexes.filter(h => h.resource === 'pending').forEach(h => {
+                    if (cfg.mainIsland && cfg.mainIsland(h.q, h.r)) h.resource = oR.pop() || 'desert';
+                    else h.resource = oR.pop() || 'water';
+                });
+            } else { pending.forEach((h, i) => h.resource = pool[i] || 'desert'); }
+
             if (document.getElementById('strictRules').checked) {
-                if (this.hexes.some(h => (h.number === 6 || h.number === 8) && this.getNeighbors(h).some(n => n.number === 6 || n.number === 8))) this.assignNumbers(config);
+                const deserts = this.hexes.filter(h => h.resource === 'desert');
+                for (const d of deserts) { if (this.getNeighbors(d).some(n => n.resource === 'desert')) return false; }
             }
+            return true;
+        }
+
+        assignNumbers(cfg) {
+            let nums = [...cfg.numbers];
+            const land = this.hexes.filter(h => h.resource !== 'water' && h.resource !== 'desert');
+            this.shuffle(nums);
+            land.forEach((h, i) => h.number = nums[i] || 0);
+            if (document.getElementById('strictRules').checked) {
+                if (land.some(h => (h.number === 6 || h.number === 8) && this.getNeighbors(h).some(n => n.number === 6 || n.number === 8))) return false;
+            }
+            return true;
+        }
+
+        placeBlockers(pCount, sKey) {
+            let robberTarget = this.hexes.find(h => h.resource === 'desert') || this.hexes.find(h => h.number === 12);
+            if (robberTarget) robberTarget.hasRobber = true;
+            let pirateTarget = (sKey === 'shores') ? ((pCount >= 5) ? {q:4,r:0} : {q:3,r:0}) : ((pCount >= 5) ? {q:-4,r:0} : {q:-2,r:4});
+            const pHex = this.hexes.find(h => h.q === pirateTarget.q && h.r === pirateTarget.r);
+            if (pHex) pHex.hasPirate = true;
         }
 
         getNeighbors(h) {
@@ -421,244 +354,257 @@
             return this.hexes.filter(other => dirs.some(d => other.q === h.q+d[0] && other.r === h.r+d[1]));
         }
 
-        buildGraph() {
-            const nodeMap = new Map(); const size = 52;
-            this.hexes.forEach(hex => {
-                for (let i = 0; i < 6; i++) {
-                    const angle = (Math.PI / 180) * (60 * i - 30);
-                    const cx = 500 + size * Math.sqrt(3) * (hex.q + hex.r / 2);
-                    const cy = 500 + size * (3/2) * hex.r;
-                    const vx = cx + size * Math.cos(angle), vy = cy + size * Math.sin(angle);
-                    const key = `${Math.round(vx)},${Math.round(vy)}`;
-                    if (!nodeMap.has(key)) nodeMap.set(key, { x: vx, y: vy, adjHexes: [], owner: null, port: null });
-                    nodeMap.get(key).adjHexes.push(hex);
+        findIslands(cfg) {
+            const islands = []; const visited = new Set();
+            const landHexes = this.hexes.filter(h => h.resource !== 'water');
+            landHexes.forEach(h => {
+                const key = `${h.q},${h.r}`;
+                if (!visited.has(key)) {
+                    const cI = []; const qA = [h]; visited.add(key);
+                    while(qA.length > 0) {
+                        const curr = qA.shift(); cI.push(curr);
+                        this.getNeighbors(curr).forEach(n => {
+                            if (n.resource !== 'water' && !visited.has(`${n.q},${n.r}`)) { visited.add(`${n.q},${n.r}`); qA.push(n); }
+                        });
+                    }
+                    islands.push(cI);
                 }
             });
-            this.nodes = Array.from(nodeMap.values());
-            this.nodes.forEach(n => {
-                n.totalPP = n.adjHexes.reduce((s, h) => {
-                    let val = PP_MAP[h.number] || 0;
-                    if (h.resource === 'gold') val += 1.5;
-                    return s + val;
-                }, 0);
-                n.expansionPP = n.adjHexes.reduce((s, h) => (h.resource === 'forest' || h.resource === 'clay') ? s + PP_MAP[h.number] : s, 0);
+            return islands;
+        }
+
+        buildGraph() {
+            const nM = new Map(); const size = 52;
+            this.hexes.forEach(hex => {
+                for (let i = 0; i < 6; i++) {
+                    const a = (Math.PI / 180) * (60 * i - 30);
+                    const cx = 500 + size * Math.sqrt(3) * (hex.q + hex.r / 2), cy = 500 + size * (3/2) * hex.r;
+                    const vx = cx + size * Math.cos(a), vy = cy + size * Math.sin(a);
+                    const key = `${Math.round(vx)},${Math.round(vy)}`;
+                    if (!nM.has(key)) nM.set(key, { x: vx, y: vy, adjHexes: [], neighbors: [], owner: null, port: null });
+                    nM.get(key).adjHexes.push(hex);
+                }
+            });
+            this.nodes = Array.from(nM.values());
+            this.nodes.forEach(n1 => {
+                this.nodes.forEach(n2 => { if (n1 !== n2 && Math.hypot(n1.x - n2.x, n1.y - n2.y) < 60) n1.neighbors.push(n2); });
+                n1.totalPP = n1.adjHexes.reduce((s, h) => s + (PP_MAP[h.number] || 0), 0);
+                n1.expansionPE = n1.adjHexes.reduce((s, h) => (h.resource === 'forest' || h.resource === 'clay') ? s + (PP_MAP[h.number] || 0) : s, 0);
             });
         }
 
         getNodeAt(q, r, corner) {
-            const size = 52;
-            const angle = (Math.PI / 180) * (60 * corner - 30);
-            const cx = 500 + size * Math.sqrt(3) * (q + r / 2);
-            const cy = 500 + size * (3/2) * r;
-            const vx = cx + size * Math.cos(angle), vy = cy + size * Math.sin(angle);
-            const key = `${Math.round(vx)},${Math.round(vy)}`;
-            return this.nodes.find(n => `${Math.round(n.x)},${Math.round(n.y)}` === key);
+            const size = 52; const a = (Math.PI / 180) * (60 * corner - 30);
+            const cx = 500 + size * Math.sqrt(3) * (q + r / 2), cy = 500 + size * (3/2) * r;
+            const vx = cx + size * Math.cos(a), vy = cy + size * Math.sin(a);
+            return this.nodes.find(n => Math.hypot(n.x - vx, n.y - vy) < 3);
         }
 
-        placePorts(config) {
+        placePorts(cfg) {
             this.ports = [];
-            if (config.randomPorts) {
+            if (cfg.randomPortsFromPool) {
                 const pool = ['any','any','any','any','any','sheep','sheep','forest','clay','wheat','ore'];
                 this.shuffle(pool);
-                config.portLocations.forEach((loc, i) => {
-                    const n1 = this.getNodeAt(loc.q, loc.r, loc.e);
-                    const n2 = this.getNodeAt(loc.q, loc.r, (loc.e + 1) % 6);
-                    const type = pool[i];
-                    if (n1 && n2) {
-                        this.ports.push({ n1, n2, type });
-                        n1.port = type; n2.port = type;
-                    }
+                cfg.portLocations.forEach((loc, i) => {
+                    const n1 = this.getNodeAt(loc.q, loc.r, loc.e), n2 = this.getNodeAt(loc.q, loc.r, (loc.e+1)%6);
+                    if (n1 && n2) { this.ports.push({ n1, n2, type: pool[i] }); }
                 });
-            } else if (config.ports && Array.isArray(config.ports)) {
-                config.ports.forEach(p => {
-                    const n1 = this.getNodeAt(p.q, p.r, p.e);
-                    const n2 = this.getNodeAt(p.q, p.r, (p.e + 1) % 6);
-                    if (n1 && n2) {
-                        this.ports.push({ n1, n2, type: p.t });
-                        n1.port = p.t; n2.port = p.t;
-                    }
+            } else if (cfg.ports) {
+                cfg.ports.forEach(p => {
+                    const n1 = this.getNodeAt(p.q, p.r, p.e), n2 = this.getNodeAt(p.q, p.r, (p.e+1)%6);
+                    if (n1 && n2) { this.ports.push({ n1, n2, type: p.t }); }
                 });
             }
         }
 
-        evaluateMap(pCount, config) {
-            const players = Array.from({ length: pCount }, (_, i) => ({ id: i+1, pp: 0, pe: 0, settlements: [] }));
-            const order = []; for(let i=0; i<pCount; i++) order.push(i); for(let i=pCount-1; i>=0; i--) order.push(i);
-            const taken = [];
+        evaluateMap(pC, cfg, sK) {
+            this.roads = []; const players = Array.from({ length: pC }, (_, i) => ({ id: i+1, pp: 0, pe: 0, settlements: [] }));
+            const order = []; for(let i=0; i<pC; i++) order.push(i); for(let i=pC-1; i>=0; i--) order.push(i);
+            const takenNodes = []; const takenRoadNodes = new Set();
             for (const pIdx of order) {
                 const possible = this.nodes.filter(n => {
-                    const isFar = !taken.some(t => Math.hypot(n.x - t.x, n.y - t.y) < 65);
-                    const onLand = n.adjHexes.some(h => config.land(h.q, h.r) && h.resource !== 'water' && h.resource !== 'desert');
-                    const startOnMain = config.mainIsland ? n.adjHexes.every(h => !config.land(h.q, h.r) || config.mainIsland(h.q, h.r)) : true;
-                    return isFar && onLand && startOnMain;
+                    const isFar = !takenNodes.some(t => Math.hypot(n.x - t.x, n.y - t.y) < 65);
+                    const touchesResource = n.adjHexes.some(h => h.resource !== 'water' && h.resource !== 'desert');
+                    let validIsland = true;
+                    if (sK === 'shores' && cfg.mainIsland) {
+                        validIsland = n.adjHexes.some(h => cfg.mainIsland(h.q, h.r)) && !n.adjHexes.some(h => h.resource !== 'water' && !cfg.mainIsland(h.q, h.r));
+                    }
+                    return isFar && touchesResource && validIsland;
                 });
                 if (possible.length === 0) return { isFair: false };
-                possible.sort((a, b) => {
-                    const peWeight = (players[pIdx].pe < 8) ? 4.0 : 1.5;
-                    let sA = a.totalPP + (a.expansionPP * peWeight) + (a.port ? 2.5 : 0);
-                    let sB = b.totalPP + (b.expansionPP * peWeight) + (b.port ? 2.5 : 0);
-                    return sB - sA;
-                });
-                const best = possible[0]; best.owner = players[pIdx].id; players[pIdx].pp += best.totalPP; players[pIdx].pe += best.expansionPP;
-                players[pIdx].settlements.push({ pp: best.totalPP, pe: best.expansionPP, resources: best.adjHexes.filter(h => config.land(h.q, h.r) && h.resource !== 'water') });
-                taken.push(best);
+                possible.sort((a, b) => (b.totalPP + b.expansionPE * 2.5) - (a.totalPP + a.expansionPE * 2.5));
+                const best = possible[0]; best.owner = players[pIdx].id; players[pIdx].pp += best.totalPP; players[pIdx].pe += best.expansionPE;
+                players[pIdx].settlements.push(best); takenNodes.push(best);
+
+                // LOGIKA DROGI: Wykluczenie dróg na wodzie
+                const bestRoadNode = best.neighbors.filter(nn => {
+                    if (takenNodes.includes(nn) || takenRoadNodes.has(nn)) return false;
+                    // Znajdź wspólne heksy dla krawędzi
+                    const sharedHexes = best.adjHexes.filter(bh => nn.adjHexes.some(nh => bh.q === nh.q && bh.r === nh.r));
+                    // Droga jest OK tylko jeśli graniczy z choć jednym lądem
+                    return sharedHexes.some(sh => sh.resource !== 'water');
+                }).sort((a, b) => b.totalPP - a.totalPP)[0] || best.neighbors.find(nn => {
+                    const sharedHexes = best.adjHexes.filter(bh => nn.adjHexes.some(nh => bh.q === nh.q && bh.r === nh.r));
+                    return sharedHexes.some(sh => sh.resource !== 'water');
+                }) || best.neighbors[0];
+
+                if (bestRoadNode) { this.roads.push({ n1: best, n2: bestRoadNode, owner: players[pIdx].id }); takenRoadNodes.add(bestRoadNode); }
             }
-            const pps = players.map(p => p.pp);
-            const pes = players.map(p => p.pe);
-            return { isFair: players.every(p => p.pe > 2), scoreGap: Math.max(...pps) - Math.min(...pps), peGap: Math.max(...pes) - Math.min(...pes), players };
+            return { isFair: players.every(p => p.pp > 5), players };
         }
 
-        render(evalRes, config) {
+        render(evalRes, cfg) {
             this.svg.innerHTML = ''; const size = 52;
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            let minX = 10000, minY = 10000, maxX = -10000, maxY = -10000;
             this.hexes.forEach(h => {
-                const x = 500 + size * Math.sqrt(3) * (h.q + h.r / 2);
-                const y = 500 + size * (3/2) * h.r;
-                for (let i = 0; i < 6; i++) {
+                const x = 500 + size * Math.sqrt(3) * (h.q + h.r / 2), y = 500 + size * (3/2) * h.r;
+                for (let i=0; i<6; i++) {
                     const a = (Math.PI / 180) * (60 * i - 30);
                     const vx = x + size * Math.cos(a), vy = y + size * Math.sin(a);
-                    minX = Math.min(minX, vx); maxX = Math.max(maxX, vx);
-                    minY = Math.min(minY, vy); maxY = Math.max(maxY, vy);
+                    minX = Math.min(minX, vx); maxX = Math.max(maxX, vx); minY = Math.min(minY, vy); maxY = Math.max(maxY, vy);
                 }
             });
-            const padding = 35;
-            this.svg.setAttribute("viewBox", `${minX - padding} ${minY - padding} ${maxX - minX + 2*padding} ${maxY - minY + 2*padding}`);
             const ocean = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            ocean.setAttribute("x", minX - padding); ocean.setAttribute("y", minY - padding);
-            ocean.setAttribute("width", maxX - minX + 2*padding); ocean.setAttribute("height", maxY - minY + 2*padding);
-            ocean.setAttribute("fill", COLORS.borderSea); ocean.setAttribute("rx", "20");
-            this.svg.appendChild(ocean);
+            ocean.setAttribute("x", minX - 1000); ocean.setAttribute("y", minY - 1000);
+            ocean.setAttribute("width", (maxX - minX) + 2000); ocean.setAttribute("height", (maxY - minY) + 2000);
+            ocean.setAttribute("fill", COLORS.borderSea); this.svg.appendChild(ocean);
 
+            this.svg.setAttribute("viewBox", `${minX - 80} ${minY - 80} ${maxX - minX + 160} ${maxY - minY + 160}`);
             this.hexes.forEach(hex => {
-                const x = 500 + size * Math.sqrt(3) * (hex.q + hex.r / 2);
-                const y = 500 + size * (3/2) * hex.r;
-                const points = []; for (let i = 0; i < 6; i++) {
-                    const a = (Math.PI / 180) * (60 * i - 30);
-                    points.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
-                }
+                const x = 500 + size * Math.sqrt(3) * (hex.q + hex.r / 2), y = 500 + size * (3/2) * hex.r;
+                const pts = [0,1,2,3,4,5].map(i => `${x + size * Math.cos((Math.PI / 180) * (60 * i - 30))},${y + size * Math.sin((Math.PI / 180) * (60 * i - 30))}`).join(" ");
                 const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-                poly.setAttribute("points", points.join(" "));
-
-                let fillColor = COLORS[hex.resource] || COLORS.borderSea;
-                if (hex.resource === 'water') {
-                    fillColor = hex.isPlayable ? COLORS.playableSea : COLORS.borderSea;
-                }
-                poly.setAttribute("fill", fillColor);
-                poly.setAttribute("class", "hex-path");
-                if (hex.resource === 'water' && hex.isPlayable) poly.style.stroke = '#87ceeb';
-
-                const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-                title.textContent = `q: ${hex.q}, r: ${hex.r}`; poly.appendChild(title);
+                poly.setAttribute("points", pts); poly.setAttribute("class", "hex-path");
+                poly.setAttribute("fill", hex.resource === 'water' ? COLORS.playableSea : COLORS[hex.resource]);
+                poly.onclick = () => this.showHexDetails(hex);
                 this.svg.appendChild(poly);
 
                 if (hex.number > 0) {
                     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", "16"); c.setAttribute("fill", "white"); c.setAttribute("fill-opacity", "0.9");
-                    g.appendChild(c);
+                    c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", "16"); c.setAttribute("fill", "white"); c.setAttribute("fill-opacity", "0.9"); g.appendChild(c);
                     const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     t.setAttribute("x", x); t.setAttribute("y", y+5); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "hex-label");
-                    t.setAttribute("fill", (hex.number === 6 || hex.number === 8) ? "#ef4444" : "#1e293b");
-                    t.textContent = hex.number; g.appendChild(t); this.svg.appendChild(g);
+                    t.setAttribute("fill", (hex.number === 6 || hex.number === 8) ? "#ef4444" : "#1e293b"); t.textContent = hex.number; g.appendChild(t);
+                    this.svg.appendChild(g);
+                }
+
+                if (hex.hasRobber) {
+                    const r = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    r.setAttribute("d", `M${x-8},${y+10} L${x+8},${y+10} L${x+5},${y-10} C${x+5},${y-15} ${x-5},${y-15} ${x-5},${y-10} Z`);
+                    r.setAttribute("class", "robber-icon"); this.svg.appendChild(r);
+                }
+
+                if (hex.hasPirate) {
+                    const p = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    p.innerHTML = `<path d="M${x-15},${y+5} Q${x},${y+12} ${x+15},${y+5} L${x+12},${y-2} L${x-12},${y-2} Z" class="pirate-icon" />
+                                   <rect x="${x-1}" y="${y-15}" width="2" height="15" fill="#334155" />
+                                   <path d="M${x},${y-15} L${x+10},${y-10} L${x},${y-5} Z" fill="black" />`;
+                    this.svg.appendChild(p);
                 }
             });
 
             this.ports.forEach(p => {
                 const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                l.setAttribute("x1", p.n1.x); l.setAttribute("y1", p.n1.y);
-                l.setAttribute("x2", p.n2.x); l.setAttribute("y2", p.n2.y);
-                l.setAttribute("class", "port-line"); this.svg.appendChild(l);
+                l.setAttribute("x1", p.n1.x); l.setAttribute("y1", p.n1.y); l.setAttribute("x2", p.n2.x); l.setAttribute("y2", p.n2.y); l.setAttribute("class", "port-line"); this.svg.appendChild(l);
                 const mx = (p.n1.x + p.n2.x) / 2, my = (p.n1.y + p.n2.y) / 2;
                 const bg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 bg.setAttribute("cx", mx); bg.setAttribute("cy", my); bg.setAttribute("r", "12"); bg.setAttribute("class", "port-bg");
+                bg.setAttribute("fill", p.type === 'any' ? '#334155' : COLORS[p.type]);
+                bg.onclick = (e) => { e.stopPropagation(); this.showPortDetails(p); };
                 this.svg.appendChild(bg);
-                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                label.setAttribute("x", mx); label.setAttribute("y", my + 4); label.setAttribute("text-anchor", "middle"); label.setAttribute("class", "port-label");
-                label.textContent = p.type === 'any' ? '3:1' : '2:1'; this.svg.appendChild(label);
+                const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                t.setAttribute("x", mx); t.setAttribute("y", my+4); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "port-label");
+                t.setAttribute("fill", (p.type === 'wheat' || p.type === 'sheep') ? '#0f172a' : 'white');
+                t.textContent = p.type === 'any' ? '3:1' : '2:1'; this.svg.appendChild(t);
+            });
+
+            this.roads.forEach(r => {
+                const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                l.setAttribute("x1", r.n1.x); l.setAttribute("y1", r.n1.y); l.setAttribute("x2", r.n2.x); l.setAttribute("y2", r.n2.y);
+                l.setAttribute("class", `road-line road-${r.owner}`); this.svg.appendChild(l);
             });
 
             this.nodes.forEach(n => {
                 if (n.owner) {
-                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    g.setAttribute("class", "node-marker"); g.onclick = () => this.showDetails(n);
+                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.setAttribute("class", "node-marker"); g.onclick = () => this.showNodeDetails(n);
                     const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    c.setAttribute("cx", n.x); c.setAttribute("cy", n.y); c.setAttribute("r", "14"); c.setAttribute("class", `player-${n.owner}`);
-                    g.appendChild(c);
+                    c.setAttribute("cx", n.x); c.setAttribute("cy", n.y); c.setAttribute("r", "13"); c.setAttribute("class", `player-${n.owner}`); g.appendChild(c);
                     const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     t.setAttribute("x", n.x); t.setAttribute("y", n.y+4); t.setAttribute("text-anchor", "middle");
-                    t.setAttribute("class", `font-black text-[12px] player-text-${n.owner}`);
-                    t.setAttribute("fill", "white"); t.textContent = n.owner; g.appendChild(t);
-                    if (document.getElementById('showValues').checked) {
-                        const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                        bg.setAttribute("x", n.x-12); bg.setAttribute("y", n.y-32); bg.setAttribute("width", "24"); bg.setAttribute("height", "14"); bg.setAttribute("rx", "4"); bg.setAttribute("fill", "white"); bg.setAttribute("stroke", "#cbd5e1");
-                        g.appendChild(bg);
-                        const v = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                        v.setAttribute("x", n.x); v.setAttribute("y", n.y-22); v.setAttribute("text-anchor", "middle"); v.setAttribute("class", "settlement-badge");
-                        v.textContent = `${n.totalPP}p`; g.appendChild(v);
-                    }
-                    this.svg.appendChild(g);
-                } else if (n.adjHexes.some(h => config.land(h.q, h.r))) {
+                    t.setAttribute("class", `font-black text-[12px] player-text-${n.owner}`); t.setAttribute("fill", "white"); t.textContent = n.owner; g.appendChild(t);
+                    const bg = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    bg.setAttribute("x", n.x); bg.setAttribute("y", n.y-22); bg.setAttribute("text-anchor", "middle"); bg.setAttribute("class", "settlement-badge"); bg.textContent = `${n.totalPP}p`; g.appendChild(bg); this.svg.appendChild(g);
+                } else if (n.adjHexes.some(h => h.isTile && h.resource !== 'water')) {
                     const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    c.setAttribute("cx", n.x); c.setAttribute("cy", n.y); c.setAttribute("r", "5"); c.setAttribute("fill", "white"); c.setAttribute("fill-opacity", "0.2");
-                    c.setAttribute("class", "node-marker"); c.onclick = () => this.showDetails(n); this.svg.appendChild(c);
+                    c.setAttribute("cx", n.x); c.setAttribute("cy", n.y); c.setAttribute("r", "5"); c.setAttribute("fill", "white"); c.setAttribute("fill-opacity", "0.3");
+                    c.setAttribute("class", "node-marker"); c.onclick = () => this.showNodeDetails(n); this.svg.appendChild(c);
                 }
             });
+            this.translateX = 0; this.translateY = 0; this.scale = 1; this.zoomSlider.value = 1; this.applyTransform();
         }
 
-        renderStats(data) {
-            const list = document.getElementById('playerStats');
-            document.getElementById('statsPanel').classList.remove('hidden');
-            list.innerHTML = '';
-            data.players.forEach(p => {
+        renderStats(evalRes) {
+            const list = document.getElementById('playerStats'); document.getElementById('statsPanel').classList.remove('hidden'); list.innerHTML = '';
+            evalRes.players.forEach(p => {
                 const div = document.createElement('div');
                 div.className = `p-4 rounded-2xl bg-white border-l-8 border-player-${p.id} shadow-sm`;
                 div.innerHTML = `
-                <div class="flex justify-between items-start mb-3">
-                    <span class="font-black text-sm uppercase text-slate-700">Gracz ${p.id}</span>
-                    <div class="text-right">
-                        <div class="mb-1">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase leading-tight">Produkcja</span>
-                            <span class="text-2xl font-black text-slate-800">${p.pp}</span>
-                        </div>
-                        <div class="bg-orange-50 px-2 py-1 rounded-lg border border-orange-100">
-                             <span class="block text-[10px] text-orange-600 font-black uppercase leading-tight">Ekspansja: ${p.pe} pkt</span>
-                        </div>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="font-black text-sm uppercase text-slate-700">Gracz ${p.id}</span>
+                        <div class="text-right"><span class="block text-[10px] text-slate-400 font-bold uppercase leading-tight">Produkcja</span><span class="text-xl font-black text-slate-800">${p.pp} PP</span></div>
                     </div>
-                </div>
-                <div class="space-y-2">
-                    ${p.settlements.map((s, i) => `
-                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
-                            <div class="flex justify-between font-bold mb-1 text-[10px]">
-                                <span>Osada ${i+1}</span>
-                                <span class="text-blue-600">${s.pp} PP | ${s.pe} PE</span>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded"><span>EXPANSION POINTS: ${p.pe} pkt</span></div>
+                        ${p.settlements.map((s, idx) => `
+                            <div class="bg-slate-50 p-2 rounded-lg text-[9px]">
+                                <div class="flex justify-between mb-1"><span class="font-black uppercase">Osada ${idx+1}</span><span class="text-blue-600 font-bold">${s.totalPP} PP | ${s.expansionPE} PE</span></div>
+                                <div class="flex flex-wrap gap-1">${s.adjHexes.map(h => `<span class="px-1 rounded text-white" style="background:${COLORS[h.resource] || COLORS.playableSea}">${h.resource === 'water' ? 'Morze' : RESOURCE_LABELS[h.resource]} ${h.number || ''}</span>`).join('')}</div>
                             </div>
-                            <div class="flex flex-wrap gap-1">
-                                ${s.resources.map(r => `<span class="px-1 rounded text-[9px] text-white" style="background:${COLORS[r.resource] || COLORS.playableSea}">${r.resource === 'water' ? 'Morze' : RESOURCE_LABELS[r.resource]} ${r.number || ''}</span>`).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+                        `).join('')}
+                    </div>
+                `;
                 list.appendChild(div);
             });
         }
 
-        showDetails(n) {
-            const panel = document.getElementById('detailPanel'); panel.classList.remove('hidden');
-            document.getElementById('nodeInfo').innerHTML = `
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Produkcja (PP)</p><p class="text-3xl font-black text-slate-800">${n.totalPP}</p></div>
-            <div class="p-4 rounded-2xl bg-orange-50 border border-orange-200"><p class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1 text-orange-600">Ekspansja (PE)</p><p class="text-3xl font-black text-orange-600">${n.expansionPP}</p></div>
-            <div class="p-4 rounded-2xl bg-blue-50 border border-blue-100"><p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Port</p><p class="text-xl font-black text-blue-700">${n.port ? (n.port === 'any' ? '3:1' : '2:1 (' + RESOURCE_LABELS[n.port] + ')') : 'Brak'}</p></div>
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-red-500">Debug (q, r)</p>
-                <div class="space-y-1 mt-2">
-                    ${n.adjHexes.map(h => `<div class="text-[9px] font-mono font-bold text-slate-600">(${h.q}, ${h.r}) - ${RESOURCE_LABELS[h.resource] || 'Woda'}</div>`).join('')}
+        showHexDetails(hex) {
+            const content = `
+                <div class="p-6 rounded-3xl text-white shadow-xl flex flex-col items-center justify-center text-center" style="background: ${COLORS[hex.resource] || COLORS.playableSea}">
+                    <div class="text-4xl font-black mb-1">${RESOURCE_LABELS[hex.resource] || 'Woda'}</div>
+                    <div class="text-lg font-bold opacity-80">${hex.number > 0 ? 'Numer: ' + hex.number : 'Brak produkcji'}</div>
                 </div>
-            </div>
-        `;
+                ${hex.hasRobber ? '<div class="p-3 bg-slate-800 text-white rounded-xl text-center font-bold text-sm uppercase tracking-widest">👤 Tu grasuje Złodziej</div>' : ''}
+                ${hex.hasPirate ? '<div class="p-3 bg-slate-900 text-white rounded-xl text-center font-bold text-sm uppercase tracking-widest">🏴‍☠️ Tu grasuje Pirat</div>' : ''}
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Położenie (q, r)</p><p class="text-2xl font-mono text-slate-800">${hex.q}, ${hex.r}</p></div>
+            `;
+            this.openModal("Szczegóły Pola", content);
         }
 
-        shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+        showNodeDetails(n) {
+            const content = `
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Produkcja (PP)</p><p class="text-3xl font-black text-slate-800">${n.totalPP}</p></div>
+                    <div class="p-4 rounded-2xl bg-orange-50 border border-orange-200"><p class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1 text-orange-600">Ekspansja (PE)</p><p class="text-3xl font-black text-orange-600">${n.expansionPE}</p></div>
+                </div>
+                <div class="p-4 rounded-2xl bg-blue-50 border border-blue-100"><p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Status Portu</p><p class="text-xl font-black text-blue-700">${n.port ? (n.port === 'any' ? 'Port 3:1' : 'Port 2:1 (' + RESOURCE_LABELS[n.port] + ')') : 'Brak portu'}</p></div>
+                <div class="space-y-3"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-1">Sąsiednie pola</p><div class="grid gap-2">${n.adjHexes.map(h => `<div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100"><span class="text-[10px] font-bold text-slate-600">${RESOURCE_LABELS[h.resource] || 'Woda'} ${h.number || ''}</span><span class="text-[9px] font-mono text-slate-400">(${h.q}, ${h.r})</span></div>`).join('')}</div></div>
+            `;
+            this.openModal(n.owner ? `Osada Gracza ${n.owner}` : "Pusty Węzeł", content);
+        }
+
+        showPortDetails(p) {
+            const content = `
+                <div class="p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center text-center transition-all" style="background: ${p.type === 'any' ? '#334155' : COLORS[p.type]}; color: ${(p.type === 'wheat' || p.type === 'sheep') ? '#0f172a' : 'white'}">
+                    <div class="text-5xl font-black mb-2">${p.type === 'any' ? '3:1' : '2:1'}</div>
+                    <div class="text-sm font-bold uppercase tracking-widest opacity-80">${p.type === 'any' ? 'Uniwersalny' : RESOURCE_LABELS[p.type]}</div>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 text-sm text-slate-600"><p>Umożliwia wymianę <strong>${p.type === 'any' ? 'trzech dowolnych' : 'dwóch sztuk ' + RESOURCE_LABELS[p.type]}</strong> na jeden wybrany surowiec.</p></div>
+            `;
+            this.openModal("Szczegóły Portu", content);
+        }
+
+        shuffle(a) { for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
     }
     window.onload = () => { window.app = new CatanGenerator(); };
 </script>
