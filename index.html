@@ -2,13 +2,13 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catan Fair Generator Pro - v4.8.6</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Catan Fair Generator Pro - v4.9.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; touch-action: none; background: #f1f5f9; }
         .hex-path { stroke: rgba(0,0,0,0.15); stroke-width: 1.5; transition: all 0.2s; cursor: pointer; }
         .hex-path:hover { stroke: rgba(255,255,255,0.5); filter: brightness(1.1); }
         .hex-label { pointer-events: none; user-select: none; font-weight: 900; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
@@ -26,21 +26,29 @@
 
         /* Kolory Graczy */
         .player-1 { fill: #2563eb; stroke: #1e3a8a; } .road-1 { stroke: #2563eb; }
-        /* Poprawka widoczności dróg gracza 2 (ciemniejszy żółty/bursztyn) */
         .player-2 { fill: #fbbf24; stroke: #b45309; } .road-2 { stroke: #d97706; }
         .player-3 { fill: #ef4444; stroke: #991b1b; } .road-3 { stroke: #ef4444; }
-        .player-4 { fill: #f8fafc; stroke: #64748b; } .road-4 { stroke: #cbd5e1; }
+        .player-4 { fill: #f8fafc; stroke: #64748b; } .road-4 { stroke: #94a3b8; }
         .player-5 { fill: #22c55e; stroke: #14532d; } .road-5 { stroke: #22c55e; }
         .player-6 { fill: #a855f7; stroke: #581c87; } .road-6 { stroke: #a855f7; }
 
-        /* Ciemny tekst na jasnych markerach dla lepszego kontrastu */
         .player-text-2, .player-text-4 { fill: #1e293b !important; }
 
         .port-line { stroke: #1e293b; stroke-width: 5; stroke-linecap: round; opacity: 0.6; }
         .port-bg { stroke: white; stroke-width: 2; cursor: pointer; transition: all 0.2s; transform-box: fill-box; transform-origin: center; }
         .port-bg:hover { transform: scale(1.3); }
 
-        #mapContainer { cursor: grab; overflow: hidden; touch-action: none; background: radial-gradient(circle, #0096c7 0%, #0077b6 100%); }
+        #mapContainer {
+            cursor: grab;
+            overflow: hidden;
+            background: #0077b6;
+            border-radius: 32px;
+        }
+        #mapCanvas {
+            background: radial-gradient(circle, #0096c7 0%, #0077b6 100%);
+            width: 100%;
+            height: 100%;
+        }
         #mapContainer:active { cursor: grabbing; }
 
         .resource-icon { pointer-events: none; opacity: 0.15; }
@@ -55,7 +63,7 @@
 
         .scrollbar-thin::-webkit-scrollbar { width: 4px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-900 overflow-x-hidden text-sm font-medium">
@@ -64,10 +72,10 @@
     <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
             <div class="flex items-center gap-3 mb-1">
-                <span class="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Version 4.8.6</span>
-                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest italic text-sm text-slate-500">Player 2 Contrast & Scenario Sync</span>
+                <span class="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Version 4.9.7</span>
+                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest italic">Stable Build & Balanced RNG</span>
             </div>
-            <h1 class="text-4xl font-black text-slate-900 tracking-tighter text-slate-900">Catan Fair Generator <span class="text-orange-500 underline decoration-4 underline-offset-4">PRO</span></h1>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tighter">Catan Fair Generator <span class="text-orange-500 underline decoration-4 underline-offset-4">PRO</span></h1>
         </div>
         <div class="flex gap-2">
             <button onclick="window.app.generate()" class="bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-2xl shadow-xl shadow-slate-200 transition-all active:scale-95 font-black uppercase tracking-widest text-sm flex items-center gap-3">
@@ -78,7 +86,7 @@
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <aside class="lg:col-span-3 space-y-6 text-slate-900">
+        <aside class="lg:col-span-3 space-y-6">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-6">
                 <section>
                     <label class="text-[11px] font-black text-slate-400 uppercase mb-3 block tracking-widest">Konfiguracja Gry</label>
@@ -99,16 +107,24 @@
                 </section>
 
                 <section class="pt-4 border-t border-slate-100">
-                    <label class="text-[11px] font-black text-slate-400 uppercase mb-3 block tracking-widest text-center md:text-left">Zasady Balansu</label>
-                    <div class="space-y-3">
-                        <label class="flex items-center justify-between p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                            <span class="text-xs font-bold text-slate-600">Restrykcyjne 6/8</span>
-                            <input type="checkbox" id="strictRules" checked class="w-5 h-5 accent-orange-500">
-                        </label>
-                        <label class="flex items-center justify-between p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-                            <span class="text-xs font-bold text-slate-600">Pokaż Drogi Startowe</span>
-                            <input type="checkbox" id="showRoads" checked class="w-5 h-5 accent-orange-500">
-                        </label>
+                    <label class="text-[11px] font-black text-slate-400 uppercase mb-3 block tracking-widest">Wpisz Seed</label>
+                    <input type="text" id="seedInput" placeholder="Zostaw puste dla losowego" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-orange-500 outline-none font-mono text-xs text-slate-700 transition-all">
+                </section>
+
+                <section id="generatedSeedSection" class="pt-4 border-t border-slate-100 hidden">
+                    <label class="text-[11px] font-black text-slate-400 uppercase mb-3 block tracking-widest">Aktualny Seed</label>
+                    <div class="bg-slate-900 rounded-2xl p-4 flex items-center justify-between group">
+                        <span id="currentSeedDisplay" class="text-orange-400 font-mono text-xs font-bold uppercase tracking-wider"></span>
+                        <button onclick="window.app.copySeed()" class="text-slate-500 hover:text-white transition-colors" title="Kopiuj Seed">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="pt-4 border-t border-slate-100">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                        <span class="text-xs font-bold text-slate-600">Pokaż Drogi Startowe</span>
+                        <input type="checkbox" id="showRoads" checked class="w-5 h-5 accent-orange-500">
                     </div>
                 </section>
 
@@ -119,11 +135,18 @@
                     </div>
                     <input type="range" id="zoomSlider" min="0.4" max="2.5" step="0.1" value="1" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-orange-500">
                 </section>
+
+                <section class="pt-4 border-t border-slate-100">
+                    <button onclick="window.app.exportToJSON()" class="w-full p-4 bg-slate-100 hover:bg-slate-200 border-2 border-transparent rounded-2xl font-bold text-slate-700 transition-all flex items-center justify-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Pobierz JSON
+                    </button>
+                </section>
             </div>
 
             <div id="statsPanel" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
                 <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-3 text-center italic">Analiza Produkcji</h3>
-                <div id="playerStats" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin"></div>
+                <div id="playerStats" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin text-slate-900"></div>
             </div>
         </aside>
 
@@ -135,7 +158,7 @@
             </div>
 
             <div class="bg-slate-300 rounded-[40px] p-1 h-[750px] lg:h-[850px] relative overflow-hidden shadow-2xl border-4 border-white">
-                <div id="loadingOverlay" class="absolute inset-0 bg-white/80 z-30 flex flex-col items-center justify-center hidden backdrop-blur-md text-slate-900">
+                <div id="loadingOverlay" class="absolute inset-0 bg-white/80 z-30 flex flex-col items-center justify-center hidden backdrop-blur-md">
                     <div class="relative">
                         <div class="animate-spin rounded-full h-24 w-24 border-b-4 border-orange-500"></div>
                         <div class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-orange-600 uppercase">CALC</div>
@@ -153,6 +176,9 @@
                             <g id="icon-ore"><path d="M-12 8 L0 -12 L12 8 L0 12 Z" /></g>
                             <g id="icon-gold"><path d="M-10 -10 L10 -10 L15 0 L10 10 L-10 10 L-15 0 Z" /></g>
                             <g id="icon-fog"><path d="M-15 5 Q-15 -10 -5 -10 Q0 -15 10 -10 Q20 -10 20 5 Q20 15 10 15 Q0 15 -10 15 Q-15 15 -15 5 Z" fill="white" /></g>
+                            <g id="icon-anchor">
+                                <path d="M0 -12 L0 8 M-6 0 L6 0 M0 12 C-8 12 -12 8 -12 0 M0 12 C 8 12 12 8 12 0 M-14 2 L-10 -2 M10 -2 L14 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </g>
                         </defs>
                     </svg>
                 </div>
@@ -166,135 +192,59 @@
     <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div>
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Inspektor Obiektu</p>
-            <h2 id="modalTitle" class="text-2xl font-black text-slate-900 tracking-tight text-slate-900 italic">Szczegóły</h2>
+            <h2 id="modalTitle" class="text-2xl font-black text-slate-900 tracking-tight italic">Szczegóły</h2>
         </div>
         <button onclick="window.app.closeModal()" class="p-4 hover:bg-slate-100 rounded-2xl transition-all"><svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
-    <div id="modalContent" class="p-8 space-y-8 flex-1 text-slate-900"></div>
+    <div id="modalContent" class="p-8 space-y-8 flex-1 text-slate-700"></div>
 </div>
 
 <script>
+    class SeededRandom {
+        constructor(seed) { this.seed = typeof seed === 'string' ? this.hashString(seed) : seed; }
+        hashString(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+            return hash;
+        }
+        next() {
+            this.seed = (this.seed * 1664525 + 1013904223) % 4294967296;
+            return Math.abs(this.seed / 4294967296);
+        }
+    }
+
     const COLORS = { forest:'#1b4332', clay:'#bc4749', wheat:'#fef08a', sheep:'#a7c957', ore:'#4a4e69', desert:'#e9c46a', gold:'#ffb703', playableSea: '#00b4d8', borderTile: '#0096c7', borderSea: '#0077b6', fog: '#94a3b8' };
-    const RESOURCE_LABELS = { forest:'Drewno', clay:'Glina', wheat:'Zboże', sheep:'Owce', ore:'Ruda', desert:'Pustynia', gold:'Złoto', any: '3:1', border: 'Ocean', fog: 'Mgła', water: 'Woda' };
+    const RESOURCE_LABELS = { forest:'Drewno', clay:'Glina', wheat:'Zboże', sheep:'Owce', ore:'Ruda', desert:'Pustynia', gold:'Złoto', any: '3:1', border: 'Ocean', fog: 'Mgła', water: 'Woda', playableSea: 'Woda' };
     const PP_MAP = { 0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1 };
+
+    const BASE_5_6_CFG = { layout: ["mmm", "mmmm", "mmmmm", "mmmmmm", "mmmmm", "mmmm", "mmm"], resources: {forest:6, wheat:6, sheep:6, clay:5, ore:5, desert:2}, numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12,12], ports: [{q:1, r:-3, e:4, t:'any'}, {q:2, r:-3, e:5, t:'sheep'}, {q:3, r:-2, e:5, t:'any'}, {q:-1, r:-1, e:3, t:'ore'}, {q:3, r:0, e:0, t:'any'}, {q:-2, r:1, e:3, t:'sheep'}, {q:2, r:1, e:1, t:'clay'}, {q:-2, r:2, e:3, t:'wheat'}, {q:-2, r:3, e:2, t:'any'}, {q:-1, r:3, e:1, t:'forest'}, {q:0, r:3, e:0, t:'any'}] };
 
     const SCENARIOS = {
         base: {
             3: { layout: ["mmm", "mmmm", "mmmmm", "mmmm", "mmm"], resources: {forest:4, wheat:4, sheep:4, clay:3, ore:3, desert:1}, numbers: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12], ports: [{q:0, r:-2, e:4, t:'any'}, {q:1, r:-2, e:5, t:'wheat'}, {q:-1, r:-1, e:3, t:'forest'}, {q:2, r:-1, e:5, t:'ore'}, {q:2, r:0, e:0, t:'any'}, {q:-2, r:1, e:3, t:'clay'}, {q:1, r:1, e:1, t:'sheep'}, {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'any'}] },
             4: { layout: ["mmm", "mmmm", "mmmmm", "mmmm", "mmm"], resources: {forest:4, wheat:4, sheep:4, clay:3, ore:3, desert:1}, numbers: [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12], ports: [{q:0, r:-2, e:4, t:'any'}, {q:1, r:-2, e:5, t:'wheat'}, {q:-1, r:-1, e:3, t:'forest'}, {q:2, r:-1, e:5, t:'ore'}, {q:2, r:0, e:0, t:'any'}, {q:-2, r:1, e:3, t:'clay'}, {q:1, r:1, e:1, t:'sheep'}, {q:-2, r:2, e:2, t:'any'}, {q:-1, r:2, e:1, t:'any'}] },
-            5: {
-                layout: ["mmm", "mmmm", "mmmmm", "mmmmmm", "mmmmm", "mmmm", "mmm"],
-                resources: {forest:6, wheat:6, sheep:6, clay:5, ore:5, desert:2},
-                numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12,12],
-                ports: [
-                    {q:1, r:-3, e:4, t:'any'},
-                    {q:2, r:-3, e:5, t:'sheep'},
-                    {q:3, r:-2, e:5, t:'any'},
-                    {q:-1, r:-1, e:3, t:'ore'},
-                    {q:3, r:0, e:0, t:'any'},
-                    {q:-2, r:1, e:3, t:'sheep'},
-                    {q:2, r:1, e:1, t:'clay'},
-                    {q:-2, r:2, e:3, t:'wheat'},
-                    {q:-2, r:3, e:2, t:'any'},
-                    {q:-1, r:3, e:1, t:'forest'},
-                    {q:0, r:3, e:0, t:'any'}
-                ]
-            }
+            5: BASE_5_6_CFG,
+            6: BASE_5_6_CFG
         },
         shores: {
-            3: { layout: ["llww", "wwwll", "wmmwlw", "wmmmwlw", "mmmmww", "mmmwl", "mmwl"], resources: {forest:3, wheat:4, sheep:5, clay:4, ore:4, gold:2}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8,8, 9,9, 10,10,10, 11,11, 12], ports: [{q:-1, r:-1, e:3, t:'wheat'}, {q:0, r:-1, e:0, t:'any'}, {q:-3, r:1, e:4, t:'ore'}, {q:-3, r:1, e:2, t:'any'}, {q:0, r:1, e:5, t:'sheep'}, {q:-3, r:3, e:3, t:'clay'}, {q:-2, r:3, e:2, t:'forest'}, {q:-2, r:3, e:0, t:'any'}] },
-            4: { layout: ["llwlw", "wwwwll", "wmmmwlw", "wmmmmwlw", "mmmmmww", "mmmmwl", "mmmwl"], resources: {forest:5, wheat:5, sheep:5, clay:5, ore:5 , gold:2, desert:1}, numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12],
-                ports: [
-                    {q:-1, r:-1, e:3, t:'any'},
-                    {q:1, r:-1, e:4, t:'ore'},
-                    {q:1, r:0, e:5, t:'any'},
-                    {q:-3, r:1, e:4, t:'sheep'},
-                    {q:-3, r:1, e:2, t:'clay'},
-                    {q:1, r:1, e:1, t:'wheat'},
-                    {q:-3, r:3, e:3, t:'any'},
-                    {q:-2, r:3, e:2, t:'forest'},
-                    {q:-1, r:3, e:0, t:'any'}
-                ]
-            },
-            5: { layout: ["lwmmmwl", "lwmmmmww", "lwmmmmmwl", "wwmmmmmmww", "lwmmmmmwl", "lwmmmmww", "lwmmmwl"], resources: {forest:7, wheat:7, sheep:7, clay:7, ore:7, gold:3, desert:2}, numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,10,10,10,10, 11,11,11, 11, 12,12,12], randomPorts: true, portLocations: [{q:2, r:-3, e:5}, {q:0, r:-2, e:4}, {q:3, r:-2, e:5}, {q:-1, r:-1, e:3}, {q:3, r:-1, e:0}, {q:-2, r:0, e:2}, {q:3, r:0, e:1}, {q:-2, r:2, e:2}, {q:1, r:2, e:0}, {q:-1, r:3, e:2}, {q:0, r:3, e:1}] }
+            3: { layout: ["llww", "wwwll", "wmmwlw", "wmmmwlw", "mmmmww", "mmmwl", "mmwl"], resources: {forest:3, wheat:4, sheep:5, clay:4, ore:4, gold:2}, numbers: [2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 8, 8, 8, 9, 9, 10, 10, 10, 11, 11, 12], ports: [{q:-1, r:-1, e:3, t:'wheat'}, {q:0, r:-1, e:0, t:'any'}, {q:-3, r:1, e:4, t:'ore'}, {q:-3, r:1, e:2, t:'any'}, {q:0, r:1, e:5, t:'sheep'}, {q:-3, r:3, e:3, t:'clay'}, {q:-2, r:3, e:2, t:'forest'}, {q:-2, r:3, e:0, t:'any'}] },
+            4: { layout: ["llwlw", "wwwwll", "wmmmwlw", "wmmmmwlw", "mmmmmww", "mmmmwl", "mmmwl"], resources: {forest:5, wheat:5, sheep:5, clay:5, ore:5 , gold:2, desert:1}, numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12], ports: [{q:-1, r:-1, e:3, t:'any'}, {q:1, r:-1, e:4, t:'ore'}, {q:1, r:0, e:5, t:'any'}, {q:-3, r:1, e:4, t:'sheep'}, {q:-3, r:1, e:2, t:'clay'}, {q:1, r:1, e:1, t:'wheat'}, {q:-3, r:3, e:3, t:'any'}, {q:-2, r:3, e:2, t:'forest'}, {q:-1, r:3, e:0, t:'any'}] },
+            5: { layout: ["lwmmmwl", "lwmmmmww", "lwmmmmmwl", "wwmmmmmmww", "lwmmmmmwl", "lwmmmmww", "lwmmmwl"], resources: {forest:7, wheat:7, sheep:7, clay:7, ore:7, gold:3, desert:2}, numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,10,10,10,10, 11,11,11, 11, 12,12,12], randomPorts: true, portLocations: [{q:2, r:-3, e:5}, {q:0, r:-2, e:4}, {q:3, r:-2, e:5}, {q:-1, r:-1, e:3}, {q:3, r:-1, e:0}, {q:-2, r:0, e:2}, {q:3, r:0, e:1}, {q:-2, r:2, e:2}, {q:1, r:2, e:0}, {q:-1, r:3, e:2}, {q:0, r:3, e:1}] },
+            6: { layout: ["lwmmmwl", "lwmmmmww", "lwmmmmmwl", "wwmmmmmmww", "lwmmmmmwl", "lwmmmmww", "lwmmmwl"], resources: {forest:7, wheat:7, sheep:7, clay:7, ore:7, gold:3, desert:2}, numbers: [2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9,10,10,10,10, 11,11,11, 11, 12,12,12], randomPorts: true, portLocations: [{q:2, r:-3, e:5}, {q:0, r:-2, e:4}, {q:3, r:-2, e:5}, {q:-1, r:-1, e:3}, {q:3, r:-1, e:0}, {q:-2, r:0, e:2}, {q:3, r:0, e:1}, {q:-2, r:2, e:2}, {q:1, r:2, e:0}, {q:-1, r:3, e:2}, {q:0, r:3, e:1}] }
         },
         islands: {
             3: { layout: ["wwmm", "mmwmm", "mmwmmw", "wwwwwww", "mmmwmm", "mmwmm", "mwww"], resources: {clay:4, forest:4, sheep:4, wheat:4, ore:4}, numbers: [2, 3,3, 4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10, 11,11, 12], ports: [{q:3, r:-2, e:5, t:'any'}, {q:-2, r:-1, e:4, t:'any'}, {q:0, r:-2, e:1, t:'ore'}, {q:2, r:-1, e:2, t:'clay'}, {q:-3, r:1, e:5, t:'forest'}, {q:-3, r:1, e:2, t:'any'}, {q:2, r:1, e:1, t:'wheat'}, {q:-2, r:2, e:1, t:'sheep'}, {q:0, r:2, e:4, t:'any'}] },
-            4: { layout: ["mwmm", "mwmmm", "mmwmmw", "wwwmwww", "mmwwmm", "mmmwm", "mmwm"], resources: {clay:4, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10,10, 11,11,11, 12], ports: [{q:-1, r:-2, e:3, t:'wheat'}, {q:3, r:-2, e:1, t:'forest'}, {q:-2, r:-1, e:1, t:'any'}, {q:0, r:0, e:4, t:'any'}, {q:-3, r:1, e:2, t:'clay'}, {q:2, r:1, e:4, t:'ore'}, {q:2, r:1, e:1, t:'any'}, {q:-2, r:2, e:5, t:'any'}, {q:-3, r:3, e:3, t:'sheep'}] },
-            5: {
-                layout: ["mmwmwmm", "mmwmmwmm", "mmwmmwwmw", "wwwwwwwwww", "wmwwmmwmm", "mmwmmwmm", "mmwmwmm"],
-                resources: {clay:6, forest:7, sheep:7, wheat:6, ore:6},
-                numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12, 4,5,9,10],
-                randomPortsFromPool: true,
-                portLocations: [{q:0, r:-3, e:4}, {q:2, r:-3, e:5}, {q:5, r:-3, e:5}, {q:-1, r:-2, e:1}, {q:4, r:-2, e:2}, {q:-2, r:-1, e:2}, {q:-4, r:2, e:3}, {q:3, r:2, e:0}, {q:-3, r:3, e:5}, {q:-1, r:2, e:2}, {q:1, r:3, e:2}]
-            }
+            4: { layout: ["mwmm", "mwmmm", "mmwmmw", "wwwmwww", "mmwwmm", "mmmwm", "mmwm"], resources: {clay:4, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5,5, 6,6, 8,8, 9,9,9, 10,10, 10, 11,11, 11, 12], ports: [{q:-1, r:-2, e:3, t:'wheat'}, {q:3, r:-2, e:1, t:'forest'}, {q:-2, r:-1, e:1, t:'any'}, {q:0, r:0, e:4, t:'any'}, {q:-3, r:1, e:2, t:'clay'}, {q:2, r:1, e:4, t:'ore'}, {q:2, r:1, e:1, t:'any'}, {q:-2, r:2, e:5, t:'any'}, {q:-3, r:3, e:3, t:'sheep'}] },
+            5: { layout: ["mmwmwmm", "mmwmmwmm", "mmwmmwwmw", "wwwwwwwwww", "wmwwmmwmm", "mmwmmwmm", "mmwmwmm"], resources: {clay:6, forest:7, sheep:7, wheat:6, ore:6}, numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12, 4,5,9,10], randomPortsFromPool: true, portLocations: [{q:0, r:-3, e:4}, {q:2, r:-3, e:5}, {q:5, r:-3, e:5}, {q:-1, r:-2, e:1}, {q:4, r:-2, e:2}, {q:-2, r:-1, e:2}, {q:-4, r:2, e:3}, {q:3, r:2, e:0}, {q:-3, r:3, e:5}, {q:-1, r:2, e:2}, {q:1, r:3, e:2}] },
+            6: { layout: ["mmwmwmm", "mmwmmwmm", "mmwmmwwmw", "wwwwwwwwww", "wmwwmmwmm", "mmwmmwmm", "mmwmwmm"], resources: {clay:6, forest:7, sheep:7, wheat:6, ore:6}, numbers: [2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12, 4,5,9,10], randomPortsFromPool: true, portLocations: [{q:0, r:-3, e:4}, {q:2, r:-3, e:5}, {q:5, r:-3, e:5}, {q:-1, r:-2, e:1}, {q:4, r:-2, e:2}, {q:-2, r:-1, e:2}, {q:-4, r:2, e:3}, {q:3, r:2, e:0}, {q:-3, r:3, e:5}, {q:-1, r:2, e:2}, {q:1, r:3, e:2}] }
         },
         fog: {
-            3: {
-                layout: ["ffwmm", "fffwmm", "wwwfwmm", "wmmwfwmw", "wmmwfww", "wmmwff", "wmwff"],
-                resources: {clay:2, forest:4, sheep:4, wheat:2, ore:2},
-                numbers: [3, 4, 5,5, 6,6, 8,8, 9,9, 10, 11,11, 12],
-                hiddenResources: {gold:2, clay:2, forest:1, sheep:1, wheat:2, ore:2, water:2},
-                hiddenNumbers: [3,3, 4,5,6,7,8,9,10,11,12],
-                pirate: {q:2, r:3},
-                ports: [
-                    {q:3, r:-3, e:5, t:'any'},
-                    {q:4, r:-3, e:0, t:'sheep'},
-                    {q:4, r:-1, e:5, t:'wheat'},
-                    {q:-2, r:0, e:2, t:'ore'},
-                    {q:3, r:0, e:0, t:'any'},
-                    {q:-2, r:1, e:2, t:'forest'},
-                    {q:-1, r:2, e:1, t:'clay'},
-                    {q:-2, r:3, e:3, t:'any'}
-                ]
-            },
-            4: {
-                layout: ["fwmmm", "ffwmmm", "wwfwwmm", "wmwffwmw", "mmwffwm", "mmwffw", "mmwff"],
-                resources: {clay:3, forest:4, sheep:4, wheat:3, ore:3},
-                numbers: [2, 11, 12, 3,3, 4,4, 5,5, 6,6, 8,8, 9,9, 10,10],
-                hiddenResources: {water:2, gold:2, clay:2, forest:1, sheep:1, wheat:2, ore:2},
-                hiddenNumbers: [11,11, 3,4,5,6,7,8,9,10,12],
-                pirate: {q:0, r:4},
-                ports: [
-                    {q:2, r:-3, e:5, t:'sheep'},
-                    {q:4, r:-3, e:4, t:'wheat'},
-                    {q:4, r:-3, e:0, t:'any'},
-                    {q:4, r:-1, e:5, t:'clay'},
-                    {q:-2, r:0, e:3, t:'forest'},
-                    {q:-3, r:1, e:2, t:'ore'},
-                    {q:3, r:1, e:5, t:'any'},
-                    {q:-3, r:3, e:1, t:'any'},
-                    {q:-3, r:3, e:3, t:'any'}
-                ]
-            },
-            5: {
-                layout: ["mwffwmm", "mwfffwmm", "mmwfffwmm", "wmmwffwmmw", "mmwfffwmm", "mmwfffwm", "mmwffwm"],
-                resources: {clay:5, forest:5, sheep:5, wheat:5, ore:4},
-                numbers: [2, 3,3, 4,4,4, 5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12],
-                hiddenResources: {water:3, gold:3, clay:2, forest:2, sheep:2, wheat:2, ore:3, desert:1},
-                hiddenNumbers: [2,2, 3,3, 5,5, 11,11, 4,6,7, 8,9,10,12],
-                pirate: {q:-1, r:4},
-                ports: [
-                    {q:4, r:-3, e:5, t:'forest'},
-                    {q:-2, r:-2, e:4, t:'any'},
-                    {q:4, r:-2, e:2, t:'sheep'},
-                    {q:-2, r:-1, e:0, t:'sheep'},
-                    {q:5, r:-1, e:5, t:'any'},
-                    {q:-3, r:0, e:3, t:'ore'},
-                    {q:4, r:1, e:1, t:'wheat'},
-                    {q:4, r:1, e:5, t:'clay'},
-                    {q:-4, r:2, e:3, t:'any'},
-                    {q:3, r:2, e:3, t:'any'},
-                    {q:-3, r:3, e:5, t:'any'}
-                ]
-            }
+            3: { layout: ["ffwmm", "fffwmm", "wwwfwmm", "wmmwfwmw", "wmmwfww", "wmmwff", "wmwff"], resources: {clay:2, forest:4, sheep:4, wheat:2, ore:2}, numbers: [3, 4, 5,5, 6,6, 8,8, 9,9, 10, 11,11, 12], hiddenResources: {gold:2, clay:2, forest:1, sheep:1, wheat:2, ore:2, water:2}, hiddenNumbers: [3,3, 4,5,6,8,9,10,11,12], pirate: {q:2, r:3}, ports: [{q:3, r:-3, e:5, t:'any'}, {q:4, r:-3, e:0, t:'sheep'}, {q:4, r:-1, e:5, t:'wheat'}, {q:-2, r:0, e:2, t:'ore'}, {q:3, r:0, e:0, t:'any'}, {q:-2, r:1, e:2, t:'forest'}, {q:-1, r:2, e:1, t:'clay'}, {q:-2, r:3, e:3, t:'any'}] },
+            4: { layout: ["fwmmm", "ffwmmm", "wwfwwmm", "wmwffwmw", "mmwffwm", "mmwffw", "mmwff"], resources: {clay:3, forest:4, sheep:4, wheat:3, ore:3}, numbers: [2, 11, 12, 3,3, 4,4, 5,5, 6,6, 8,8, 9,9, 10,10], hiddenResources: {water:2, gold:2, clay:2, forest:1, sheep:1, wheat:2, ore:2}, hiddenNumbers: [11,11, 3,4,5,6,8,9,10,12], pirate: {q:0, r:4}, ports: [{q:2, r:-3, e:5, t:'sheep'}, {q:4, r:-3, e:4, t:'wheat'}, {q:4, r:-3, e:0, t:'any'}, {q:4, r:-1, e:5, t:'clay'}, {q:-2, r:0, e:3, t:'forest'}, {q:-3, r:1, e:2, t:'ore'}, {q:3, r:1, e:5, t:'any'}, {q:-3, r:3, e:1, t:'any'}, {q:-3, r:3, e:3, t:'any'}] },
+            5: { layout: ["mwffwmm", "mwfffwmm", "mmwfffwmm", "wmmwffwmmw", "mmwfffwmm", "mmwfffwm", "mmwffwm"], resources: {clay:5, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12], hiddenResources: {water:3, gold:3, clay:2, forest:2, sheep:2, wheat:2, ore:3, desert:1}, hiddenNumbers: [2,2, 3,3, 5,5, 11,11, 4,6, 8,9,10,12], pirate: {q:-1, r:4}, ports: [{q:4, r:-3, e:5, t:'forest'}, {q:-2, r:-2, e:4, t:'any'}, {q:4, r:-2, e:2, t:'sheep'}, {q:-2, r:-1, e:0, t:'sheep'}, {q:5, r:-1, e:5, t:'any'}, {q:-3, r:0, e:3, t:'ore'}, {q:4, r:1, e:1, t:'wheat'}, {q:4, r:1, e:5, t:'clay'}, {q:-4, r:2, e:3, t:'any'}, {q:3, r:2, e:3, t:'any'}, {q:-3, r:3, e:5, t:'any'}] },
+            6: { layout: ["mwffwmm", "mwfffwmm", "mmwfffwmm", "wmmwffwmmw", "mmwfffwmm", "mmwfffwm", "mmwffwm"], resources: {clay:5, forest:5, sheep:5, wheat:5, ore:4}, numbers: [2, 3,3, 4,4,4, 5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11, 12,12], hiddenResources: {water:3, gold:3, clay:2, forest:2, sheep:2, wheat:2, ore:3, desert:1}, hiddenNumbers: [2,2, 3,3, 5,5, 11,11, 4,6, 8,9,10,12], pirate: {q:-1, r:4}, ports: [{q:4, r:-3, e:5, t:'forest'}, {q:-2, r:-2, e:4, t:'any'}, {q:4, r:-2, e:2, t:'sheep'}, {q:-2, r:-1, e:0, t:'sheep'}, {q:5, r:-1, e:5, t:'any'}, {q:-3, r:0, e:3, t:'ore'}, {q:4, r:1, e:1, t:'wheat'}, {q:4, r:1, e:5, t:'clay'}, {q:-4, r:2, e:3, t:'any'}, {q:3, r:2, e:3, t:'any'}, {q:-3, r:3, e:5, t:'any'}] }
         }
     };
-
-    SCENARIOS.base[6] = SCENARIOS.base[5];
-    SCENARIOS.shores[6] = SCENARIOS.shores[5];
-    SCENARIOS.islands[6] = SCENARIOS.islands[5];
-    SCENARIOS.fog[6] = SCENARIOS.fog[5];
 
     class CatanGenerator {
         constructor() {
@@ -302,7 +252,9 @@
             this.container = document.getElementById('mapContainer');
             this.loading = document.getElementById('loadingOverlay');
             this.zoomSlider = document.getElementById('zoomSlider');
-            this.state = { hexes: [], nodes: [], ports: [], roads: [], scale: 1, tx: 0, ty: 0, isPanning: false, start: { x: 0, y: 0 } };
+            this.state = { hexes: [], nodes: [], ports: [], roads: [], scale: 1, tx: 0, ty: 0, currentSeed: "" };
+            this.rng = null;
+            this.touchData = { lastDist: 0 };
             this.init();
         }
 
@@ -310,6 +262,30 @@
             this.container.addEventListener('mousedown', e => { this.state.isPanning = true; this.state.start = { x: e.clientX - this.state.tx, y: e.clientY - this.state.ty }; });
             window.addEventListener('mousemove', e => { if (!this.state.isPanning) return; this.state.tx = e.clientX - this.state.start.x; this.state.ty = e.clientY - this.state.start.y; this.applyTransform(); });
             window.addEventListener('mouseup', () => this.state.isPanning = false);
+
+            this.container.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) {
+                    this.state.isPanning = true;
+                    this.state.start = { x: e.touches[0].clientX - this.state.tx, y: e.touches[0].clientY - this.state.ty };
+                } else if (e.touches.length === 2) {
+                    this.touchData.lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                }
+            }, { passive: true });
+
+            this.container.addEventListener('touchmove', e => {
+                if (e.touches.length === 1 && this.state.isPanning) {
+                    this.state.tx = e.touches[0].clientX - this.state.start.x;
+                    this.state.ty = e.touches[0].clientY - this.state.start.y;
+                    this.applyTransform();
+                } else if (e.touches.length === 2) {
+                    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    const delta = dist / this.touchData.lastDist;
+                    this.updateZoom(this.state.scale * delta);
+                    this.touchData.lastDist = dist;
+                }
+            }, { passive: true });
+
+            this.container.addEventListener('touchend', () => { this.state.isPanning = false; });
             this.container.addEventListener('wheel', e => { e.preventDefault(); const d = e.deltaY > 0 ? 0.95 : 1.05; this.updateZoom(this.state.scale * d); }, { passive: false });
             this.zoomSlider.addEventListener('input', e => this.updateZoom(parseFloat(e.target.value)));
             ['showRoads'].forEach(id => document.getElementById(id).addEventListener('change', () => this.renderCurrent()));
@@ -318,29 +294,48 @@
 
         updateZoom(val) { this.state.scale = Math.min(Math.max(val, 0.4), 3); this.zoomSlider.value = this.state.scale; document.getElementById('zoomVal').textContent = Math.round(this.state.scale * 100) + '%'; this.applyTransform(); }
         applyTransform() { this.svg.style.transform = `translate(${this.state.tx}px, ${this.state.ty}px) scale(${this.state.scale})`; }
+        seededShuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rng.next() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+        copySeed() { const seed = this.state.currentSeed; if(!seed) return; const el = document.createElement('textarea'); el.value = seed; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
+        exportToJSON() { const data = { seed: this.state.currentSeed, map: { hexes: this.state.hexes.map(h => ({ q: h.q, r: h.r, res: h.resource, num: h.number })) } }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `catan-${this.state.currentSeed}.json`; a.click(); }
+
+        getNeighbors(h, all) {
+            const dirs = [[1,0], [1,-1], [0,-1], [-1,0], [-1,1], [0,1]];
+            return all.filter(o => dirs.some(d => o.q === h.q + d[0] && o.r === h.r + d[1]));
+        }
 
         async generate() {
             this.loading.classList.remove('hidden');
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 50));
+
+            const inputSeed = document.getElementById('seedInput').value.trim();
+            const seed = inputSeed || Math.random().toString(36).substring(2, 9).toUpperCase();
+            this.state.currentSeed = seed;
+            this.rng = new SeededRandom(seed);
+            document.getElementById('currentSeedDisplay').textContent = seed;
+            document.getElementById('generatedSeedSection').classList.remove('hidden');
+
             const pCount = parseInt(document.getElementById('playerCount').value);
             const sKey = document.getElementById('scenario').value;
             const cfg = SCENARIOS[sKey][pCount];
-            document.getElementById('activeScenarioName').textContent = document.getElementById('scenario').options[document.getElementById('scenario').selectedIndex].text;
+
+            if (!cfg) {
+                console.error(`Błąd: Brak konfiguracji dla scenariusza ${sKey} i liczby graczy ${pCount}`);
+                this.loading.classList.add('hidden');
+                return;
+            }
 
             let attempt = 0;
             while (attempt < 1500) {
                 const map = this.createSkeleton(cfg);
-                if (this.fillResources(map, cfg, sKey)) {
-                    if (this.fillNumbers(map, cfg, sKey)) {
-                        this.buildTopology(map);
-                        this.placePorts(map, cfg);
-                        this.placeBlockers(map, sKey, pCount);
-                        const evalRes = this.evaluate(map, pCount, attempt > 500);
-                        if (evalRes.isFair) {
-                            this.state = { ...this.state, ...map, roads: evalRes.roads };
-                            this.renderCurrent(evalRes);
-                            break;
-                        }
+                if (this.fillResources(map, cfg) && this.fillNumbers(map, cfg)) {
+                    this.buildTopology(map);
+                    this.placePorts(map, cfg);
+                    this.placeBlockers(map, sKey, pCount);
+                    const evalRes = this.evaluate(map, pCount, attempt);
+                    if (evalRes.isFair) {
+                        this.state = { ...this.state, ...map, roads: evalRes.roads };
+                        this.renderCurrent(evalRes);
+                        break;
                     }
                 }
                 attempt++;
@@ -349,106 +344,57 @@
         }
 
         createSkeleton(cfg) {
-            const hexes = [];
-            const tileCoords = new Set();
-            const rOffset = Math.floor(cfg.layout.length / 2);
-
+            const hexes = []; const landCoords = new Set(); const rOffset = Math.floor(cfg.layout.length / 2);
             cfg.layout.forEach((row, rIdx) => {
-                const r = rIdx - rOffset;
-                const qStart = Math.round(-((row.length - 1) / 2) - (r / 2));
+                const r = rIdx - rOffset; const qStart = Math.round(-((row.length - 1) / 2) - (r / 2));
                 row.split('').forEach((char, qi) => {
-                    const q = qStart + qi;
-                    const canStart = char === 'm';
-                    const isLand = char === 'm' || char === 'l';
-                    const isFog = char === 'f';
-                    tileCoords.add(`${q},${r}`);
-                    hexes.push({
-                        q, r,
-                        canStart: canStart,
-                        resource: isFog ? 'fog' : (isLand ? 'pending' : 'playableSea'),
-                        isTile: isLand || isFog,
-                        isFog: isFog,
-                        number: 0, x:0, y:0
-                    });
+                    const q = qStart + qi; landCoords.add(`${q},${r}`);
+                    hexes.push({ q, r, canStart: char === 'm', resource: char === 'f' ? 'fog' : (['m','l'].includes(char) ? 'pending' : 'playableSea'), isTile: ['m', 'l', 'f'].includes(char), isFog: char === 'f', number: 0, x:0, y:0 });
                 });
             });
-
-            const border = new Set();
-            tileCoords.forEach(k => {
+            const borderCoords = new Set();
+            landCoords.forEach(k => {
                 const [q, r] = k.split(',').map(Number);
                 [[1,0], [1,-1], [0,-1], [-1,0], [-1,1], [0,1]].forEach(d => {
-                    const nk=`${q+d[0]},${r+d[1]}`;
-                    if(!tileCoords.has(nk)) border.add(nk);
+                    const nk = `${q+d[0]},${r+d[1]}`; if (!landCoords.has(nk)) borderCoords.add(nk);
                 });
             });
-            border.forEach(k => {
-                const [q,r] = k.split(',').map(Number);
-                hexes.push({q, r, resource: 'border', number:0, isTile: false, canStart: false});
-            });
+            borderCoords.forEach(k => { const [q, r] = k.split(',').map(Number); hexes.push({ q, r, resource: 'border', isTile: false }); });
             return { hexes, nodes: [], ports: [] };
         }
 
-        getNeighbors(h, all) {
-            const dirs = [[1,0], [1,-1], [0,-1], [-1,0], [-1,1], [0,1]];
-            return all.filter(o => dirs.some(d => o.q === h.q+d[0] && o.r === h.r+d[1]));
-        }
+        fillResources(map, cfg) {
+            let pool = []; Object.entries(cfg.resources).forEach(([res, count]) => { for(let i=0; i<count; i++) pool.push(res); });
+            const land = map.hexes.filter(h => h.resource === 'pending');
+            this.seededShuffle(pool);
+            land.forEach((h, i) => h.resource = pool[i]);
 
-        fillResources(map, cfg, sKey) {
-            let visiblePool = [];
-            Object.entries(cfg.resources).forEach(([res, count]) => { for(let i=0; i<count; i++) visiblePool.push(res); });
-            const visibleTiles = map.hexes.filter(h => h.resource === 'pending');
-
-            const placeWithSpacing = (tilesToFill, pool) => {
-                const remaining = [...pool];
-                this.shuffle(remaining);
-                for (let attempt = 0; attempt < 100; attempt++) {
-                    const localPool = [...remaining];
-                    let conflict = false;
-                    for (let i = 0; i < tilesToFill.length; i++) {
-                        const tile = tilesToFill[i];
-                        const neighbors = this.getNeighbors(tile, map.hexes);
-                        let foundIndex = -1;
-                        for (let j = 0; j < localPool.length; j++) {
-                            const candidate = localPool[j];
-                            if (!neighbors.some(nb => nb.resource === candidate)) { foundIndex = j; break; }
-                        }
-                        if (foundIndex !== -1) { tile.resource = localPool.splice(foundIndex, 1)[0]; }
-                        else { tile.resource = localPool.shift(); conflict = true; }
+            for(let i=0; i<60; i++) {
+                let conflicts = 0;
+                land.forEach(h => {
+                    if (this.getNeighbors(h, land).some(n => n.resource === h.resource)) {
+                        const swapIdx = Math.floor(this.rng.next() * land.length);
+                        const tmp = h.resource; h.resource = land[swapIdx].resource; land[swapIdx].resource = tmp;
+                        conflicts++;
                     }
-                    if (!conflict) return true;
-                    this.shuffle(remaining);
-                }
-                return false;
-            };
-
-            if (sKey === 'shores') {
-                const goldCount = cfg.resources.gold || 0;
-                const otherPool = visiblePool.filter(r => r !== 'gold');
-                this.shuffle(otherPool);
-                const externalTiles = visibleTiles.filter(h => !h.canStart);
-                const mainTiles = visibleTiles.filter(h => h.canStart);
-                this.shuffle(externalTiles);
-                for (let i = 0; i < goldCount; i++) { if (externalTiles[i]) externalTiles[i].resource = 'gold'; }
-                const remainingTiles = [...mainTiles, ...externalTiles.slice(goldCount)];
-                placeWithSpacing(remainingTiles, otherPool);
-            } else {
-                placeWithSpacing(visibleTiles, visiblePool);
+                });
+                if(conflicts === 0) break;
             }
             return true;
         }
 
-        fillNumbers(map, cfg, sKey) {
-            const tiles = map.hexes.filter(h => h.isTile && h.resource !== 'desert' && !h.isFog);
-            const pool = [...cfg.numbers];
-            this.shuffle(pool);
-            tiles.forEach((h, i) => h.number = pool[i] || 0);
+        fillNumbers(map, cfg) {
+            const tiles = map.hexes.filter(h => h.isTile && h.resource !== 'border' && h.resource !== 'desert' && !h.isFog);
+            const pool = [...cfg.numbers]; this.seededShuffle(pool);
+            tiles.forEach((h, i) => h.number = pool[i]);
+            if (tiles.some(h => (h.number === 6 || h.number === 8) && this.getNeighbors(h, map.hexes).some(n => n.number === 6 || n.number === 8))) return false;
             return true;
         }
 
         buildTopology(map) {
             const nM = new Map(); const size = 52;
             map.hexes.forEach(h => {
-                const cx = 500 + size * Math.sqrt(3) * (h.q + h.r / 2), cy = 500 + size * (3/2) * h.r;
+                const cx = 500 + size * Math.sqrt(3) * (h.q + h.r / 2), cy = 500 + size * 1.5 * h.r;
                 h.x = cx; h.y = cy;
                 for (let i=0; i<6; i++) {
                     const a = (Math.PI/180)*(60*i-30);
@@ -468,91 +414,89 @@
         placePorts(map, cfg) {
             const size = 52;
             const getV = (hq, hr, corner) => {
-                const cx = 500 + size * Math.sqrt(3) * (hq + hr / 2), cy = 500 + size * (3 / 2) * hr;
+                const cx = 500 + size * Math.sqrt(3) * (hq + hr / 2), cy = 500 + size * 1.5 * hr;
                 const a = (Math.PI/180)*(60*corner-30);
                 const vx = cx + size*Math.cos(a), vy = cy + size*Math.sin(a);
                 return map.nodes.find(n => Math.hypot(n.x-vx, n.y-vy) < 5);
             };
-            if (cfg.randomPorts || cfg.randomPortsFromPool) {
-                const pool = (cfg.portLocations && cfg.portLocations.length > 9)
-                    ? ['any','any','any','any','any','any','sheep','forest','clay','wheat','ore']
-                    : ['any','any','any','sheep','forest','clay','wheat','ore'];
-                this.shuffle(pool);
-                cfg.portLocations.forEach((loc, i) => {
-                    const n1 = getV(loc.q, loc.r, loc.e), n2 = getV(loc.q, loc.r, (loc.e+1)%6);
-                    if (n1 && n2) map.ports.push({ n1, n2, type: pool[i] || 'any' });
-                });
-            } else if (cfg.ports) {
-                cfg.ports.forEach(p => {
-                    const n1 = getV(p.q, p.r, p.e), n2 = getV(p.q, p.r, (p.e+1)%6);
-                    if (n1 && n2) map.ports.push({ n1, n2, type: p.t });
-                });
-            }
+            if (cfg.ports) cfg.ports.forEach(p => {
+                const n1 = getV(p.q, p.r, p.e), n2 = getV(p.q, p.r, (p.e+1)%6);
+                if (n1 && n2) { map.ports.push({ n1, n2, type: p.t }); n1.port = p.t; n2.port = p.t; }
+            });
         }
 
         placeBlockers(map, sKey, pCount) {
             const desert = map.hexes.find(h => h.resource === 'desert');
             if (desert) desert.hasRobber = true;
-            else {
-                const h12 = map.hexes.find(h => h.number === 12);
-                if(h12) h12.hasRobber = true;
-            }
-
-            const pirateCfg = SCENARIOS[sKey][pCount].pirate;
-            if (pirateCfg) {
-                const pHex = map.hexes.find(h => h.q === pirateCfg.q && h.r === pirateCfg.r);
-                if (pHex) pHex.hasPirate = true;
-            } else if (sKey !== 'base') {
-                const piratePos = (sKey === 'shores') ? (pCount >= 5 ? {q:5, r:0} : (pCount === 4 ? {q:4, r:0} : {q:3, r:0})) : (pCount >= 5 ? {q:-4, r:0} : {q:-2, r:4});
-                const pHex = map.hexes.find(h => h.q === piratePos.q && h.r === piratePos.r);
-                if (pHex) pHex.hasPirate = true;
-            }
+            const pCfg = SCENARIOS[sKey][pCount].pirate;
+            if (pCfg) { const pHex = map.hexes.find(h => h.q === pCfg.q && h.r === pCfg.r); if (pHex) pHex.hasPirate = true; }
         }
 
-        evaluate(map, pCount, relaxed) {
+        getGraphDist(startNode, targetNode) {
+            let q = [[startNode, 0]]; let visited = new Set([startNode]);
+            while(q.length > 0) {
+                let [curr, dist] = q.shift();
+                if(curr === targetNode) return dist;
+                if(dist >= 5) continue;
+                for(let nb of curr.neighbors) if(!visited.has(nb)) { visited.add(nb); q.push([nb, dist+1]); }
+            }
+            return 99;
+        }
+
+        evaluate(map, pCount, attempt) {
             const players = Array.from({length: pCount}, (_, i) => ({id: i+1, pp: 0, settlements: []}));
             const roads = []; const order = [...Array(pCount).keys(), ...[...Array(pCount).keys()].reverse()];
-            const taken = new Set();
+            const taken = new Set(); const roadEnds = new Map();
+            const minOwnDist = attempt > 800 ? 2 : (attempt > 400 ? 3 : 4);
+
             for (const pIdx of order) {
+                const p = players[pIdx];
                 const candidates = map.nodes.filter(n => {
-                    const isFar = Array.from(taken).every(t => Math.hypot(n.x-t.x, n.y-t.y) > 75);
-                    const touchesMainIsland = n.adj.some(h => h.canStart);
-                    return isFar && touchesMainIsland;
+                    const isFarGlobal = Array.from(taken).every(t => Math.hypot(n.x-t.x, n.y-t.y) > 75);
+                    const touchesMain = n.adj.some(h => h.canStart);
+                    let isFarSelf = true; if(p.settlements.length > 0) isFarSelf = this.getGraphDist(p.settlements[0], n) >= minOwnDist;
+                    return isFarGlobal && touchesMain && isFarSelf;
                 });
                 if (candidates.length === 0) return { isFair: false };
-                candidates.sort((a, b) => b.totalPP - a.totalPP);
-                const best = candidates[0]; best.owner = players[pIdx].id;
-                players[pIdx].pp += best.totalPP; players[pIdx].settlements.push(best); taken.add(best);
 
-                // Szukaj optymalnego węzła na drogę, jeśli nie ma wolnego, weź pierwszego lepszego
-                const rNode = best.neighbors.find(nn => !Array.from(taken).some(t => Math.hypot(nn.x-t.x, nn.y-t.y) < 10)) || best.neighbors[0];
-                if (rNode) roads.push({ n1: best, n2: rNode, owner: players[pIdx].id });
+                candidates.forEach(cand => {
+                    const probs = cand.adj.map(h => PP_MAP[h.number] || 0).filter(v => v > 0);
+                    const sum = probs.reduce((a, b) => a + b, 0);
+                    const varianceScore = (new Set(probs)).size * 3;
+                    cand.score = (sum * 10) + varianceScore;
+                    let bestPortDist = 99;
+                    map.nodes.filter(n => n.port).forEach(pn => { const d = this.getGraphDist(cand, pn); if(d < bestPortDist) bestPortDist = d; });
+                    if(bestPortDist <= 2) cand.score += (3 - bestPortDist) * 5;
+                });
+
+                candidates.sort((a, b) => b.score - a.score + (this.rng.next() * 2));
+                const best = candidates[0]; best.owner = p.id; p.pp += best.totalPP; p.settlements.push(best); taken.add(best);
+
+                const usedAngles = roads.filter(r => r.owner === p.id).map(r => Math.atan2(r.n2.y - r.n1.y, r.n2.x - r.n1.x));
+                const rNode = best.neighbors.find(nn => {
+                    const busy = Array.from(taken).some(t => Math.hypot(nn.x-t.x, nn.y-t.y) < 10);
+                    const conv = roadEnds.has(nn) && roadEnds.get(nn) !== p.id;
+                    const angle = Math.atan2(nn.y - best.y, nn.x - best.x);
+                    const dirConflict = usedAngles.some(ua => Math.abs(ua - angle) < 0.1);
+                    return !busy && !conv && !dirConflict;
+                }) || best.neighbors.find(nn => !roadEnds.has(nn)) || best.neighbors[0];
+
+                if (rNode) { roads.push({ n1: best, n2: rNode, owner: p.id }); roadEnds.set(rNode, p.id); }
             }
             const pps = players.map(p => p.pp);
-            const minPP = Math.min(...pps);
-            return { isFair: minPP > 4 && (relaxed ? (Math.max(...pps)-minPP <= 8) : (Math.max(...pps)-minPP <= 5)), players, roads };
+            return { isFair: (Math.max(...pps) - Math.min(...pps)) <= 6, players, roads };
         }
 
         renderCurrent(evalRes) {
-            this.svg.innerHTML = ''; const size = 52;
-            const showRoads = document.getElementById('showRoads').checked;
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            this.state.hexes.forEach(h => {
-                for (let i=0; i<6; i++) {
-                    const a=(Math.PI/180)*(60*i-30);
-                    const vx = h.x + size*Math.cos(a), vy = h.y + size*Math.sin(a);
-                    minX = Math.min(minX, vx); maxX = Math.max(maxX, vx); minY = Math.min(minY, vy); maxY = Math.max(maxY, vy);
-                }
-            });
-            const pad = 40;
-            this.svg.setAttribute("viewBox", `${minX - pad} ${minY - pad} ${maxX - minX + pad*2} ${maxY - minY + pad*2}`);
+            this.svg.innerHTML = ''; const size = 52; const showRoads = document.getElementById('showRoads').checked;
             this.state.hexes.forEach(h => {
                 const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
                 const pts = [0,1,2,3,4,5].map(i => { const a=(Math.PI/180)*(60*i-30); return `${h.x + size*Math.cos(a)},${h.y + size*Math.sin(a)}`; }).join(" ");
                 poly.setAttribute("points", pts); poly.setAttribute("class", "hex-path");
-                poly.setAttribute("fill", h.resource === 'playableSea' ? COLORS.playableSea : (h.resource === 'border' ? COLORS.borderTile : COLORS[h.resource]));
+                poly.setAttribute("fill", h.resource === 'border' ? COLORS.borderTile : (COLORS[h.resource] || COLORS.playableSea));
                 poly.onclick = () => this.showHexDetails(h); this.svg.appendChild(poly);
-                if (h.isTile && h.resource !== 'desert' && h.resource !== 'border' && h.resource !== 'playableSea' && h.resource !== 'fog') {
+
+                if (h.isTile && !['desert','border','playableSea','fog'].includes(h.resource)) {
                     const icon = document.createElementNS("http://www.w3.org/2000/svg", "use");
                     icon.setAttribute("href", `#icon-${h.resource}`); icon.setAttribute("x", h.x); icon.setAttribute("y", h.y);
                     icon.setAttribute("class", "resource-icon text-white"); icon.setAttribute("transform", `scale(1.4) translate(${h.x/-1.4}, ${h.y/-1.4})`);
@@ -566,10 +510,8 @@
                 }
                 if (h.number > 0) {
                     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    c.setAttribute("cx", h.x); c.setAttribute("cy", h.y); c.setAttribute("r", "16"); c.setAttribute("fill", "white");
-                    const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    t.setAttribute("x", h.x); t.setAttribute("y", h.y+5); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "hex-label");
+                    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle"); c.setAttribute("cx", h.x); c.setAttribute("cy", h.y); c.setAttribute("r", "16"); c.setAttribute("fill", "white");
+                    const t = document.createElementNS("http://www.w3.org/2000/svg", "text"); t.setAttribute("x", h.x); t.setAttribute("y", h.y+5); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "hex-label");
                     t.setAttribute("fill", (h.number === 6 || h.number === 8) ? "#ef4444" : "#1e293b"); t.textContent = h.number;
                     g.appendChild(c); g.appendChild(t); this.svg.appendChild(g);
                 }
@@ -584,69 +526,56 @@
                     this.svg.appendChild(p);
                 }
             });
-            this.state.ports.forEach(p => {
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", p.n1.x); line.setAttribute("y1", p.n1.y); line.setAttribute("x2", p.n2.x); line.setAttribute("y2", p.n2.y);
-                line.setAttribute("class", "port-line"); this.svg.appendChild(line);
-                const mx = (p.n1.x+p.n2.x)/2, my = (p.n1.y+p.n2.y)/2;
-                const bg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                bg.setAttribute("cx", mx); bg.setAttribute("cy", my); bg.setAttribute("r", "12"); bg.setAttribute("class", "port-bg");
-                bg.setAttribute("fill", p.type === 'any' ? '#1e293b' : COLORS[p.type]);
-                bg.onclick = () => this.showPortDetails(p); this.svg.appendChild(bg);
-                const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                t.setAttribute("x", mx); t.setAttribute("y", my+4); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", "text-[9px] font-black");
-                t.setAttribute("fill", (p.type==='wheat'||p.type==='sheep') ? '#1e293b' : 'white'); t.textContent = p.type==='any' ? '3:1' : '2:1';
-                this.svg.appendChild(t);
-            });
+
             if (showRoads) this.state.roads.forEach(r => {
-                const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                l.setAttribute("x1", r.n1.x); l.setAttribute("y1", r.n1.y); l.setAttribute("x2", r.n2.x); l.setAttribute("y2", r.n2.y);
+                const l = document.createElementNS("http://www.w3.org/2000/svg", "line"); l.setAttribute("x1", r.n1.x); l.setAttribute("y1", r.n1.y); l.setAttribute("x2", r.n2.x); l.setAttribute("y2", r.n2.y);
                 l.setAttribute("class", `road-line road-${r.owner}`); this.svg.appendChild(l);
             });
-            this.state.nodes.forEach(n => {
-                if (n.owner) {
-                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.setAttribute("class", "node-marker"); g.onclick = () => this.showNodeDetails(n);
-                    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle"); c.setAttribute("cx", n.x); c.setAttribute("cy", n.y); c.setAttribute("r", "14"); c.setAttribute("class", `player-${n.owner}`);
-                    const t = document.createElementNS("http://www.w3.org/2000/svg", "text"); t.setAttribute("x", n.x); t.setAttribute("y", n.y+5); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", `font-black text-[12px] player-text-${n.owner} fill-white`); t.textContent = n.owner;
-                    const b = document.createElementNS("http://www.w3.org/2000/svg", "text"); b.setAttribute("x", n.x); b.setAttribute("y", n.y-20); b.setAttribute("text-anchor", "middle"); b.setAttribute("class", "settlement-badge"); b.textContent = `${n.totalPP}p`;
-                    g.appendChild(c); g.appendChild(t); g.appendChild(b); this.svg.appendChild(g);
-                }
+
+            // Porty renderowane po drogach, by były nad nimi
+            this.state.ports.forEach(p => {
+                const mx = (p.n1.x + p.n2.x) / 2, my = (p.n1.y + p.n2.y) / 2;
+                const bg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                bg.setAttribute("cx", mx); bg.setAttribute("cy", my); bg.setAttribute("r", "14"); bg.setAttribute("class", "port-bg");
+                bg.setAttribute("fill", p.type === 'any' ? '#1e293b' : COLORS[p.type]);
+                bg.onclick = () => this.showPortDetails(p);
+                this.svg.appendChild(bg);
+
+                const icon = document.createElementNS("http://www.w3.org/2000/svg", "use");
+                icon.setAttribute("href", `#icon-anchor`); icon.setAttribute("x", mx); icon.setAttribute("y", my);
+                icon.setAttribute("class", "text-white pointer-events-none opacity-80");
+                icon.setAttribute("transform", `scale(0.8) translate(${mx/-0.8}, ${my/-0.8})`);
+                this.svg.appendChild(icon);
             });
+
+            this.state.nodes.forEach(n => { if (n.owner) {
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.setAttribute("class", "node-marker"); g.onclick = () => this.showNodeDetails(n);
+                const c = document.createElementNS("http://www.w3.org/2000/svg", "circle"); c.setAttribute("cx", n.x); c.setAttribute("cy", n.y); c.setAttribute("r", "14"); c.setAttribute("class", `player-${n.owner}`);
+                const t = document.createElementNS("http://www.w3.org/2000/svg", "text"); t.setAttribute("x", n.x); t.setAttribute("y", n.y+5); t.setAttribute("text-anchor", "middle"); t.setAttribute("class", `font-black text-[12px] player-text-${n.owner} fill-white`); t.textContent = n.owner;
+                g.appendChild(c); g.appendChild(t); this.svg.appendChild(g);
+            }});
+
+            const hx = this.state.hexes.map(h => h.x), hy = this.state.hexes.map(h => h.y);
+            const minX = Math.min(...hx) - 200, minY = Math.min(...hy) - 200;
+            const maxX = Math.max(...hx) + 200, maxY = Math.max(...hy) + 200;
+            this.svg.setAttribute("viewBox", `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
             if (evalRes) this.updateStatsUI(evalRes.players);
-            this.state.tx = 0; this.state.ty = 0; this.state.scale = 1;
-            this.zoomSlider.value = 1; document.getElementById('zoomVal').textContent = '100%';
-            this.applyTransform();
         }
 
         updateStatsUI(players) {
             const list = document.getElementById('playerStats'); list.innerHTML = '';
             players.forEach(p => {
                 const div = document.createElement('div');
-                div.className = `p-4 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md border-l-4 border-player-${p.id}`;
+                div.className = `p-4 rounded-2xl bg-white border border-slate-100 shadow-sm border-l-4 border-player-${p.id}`;
                 const resStats = { forest: 0, clay: 0, wheat: 0, sheep: 0, ore: 0, gold: 0 };
-                p.settlements.forEach(s => {
-                    s.adj.forEach(h => {
-                        if (h.isTile && h.resource !== 'desert' && h.resource !== 'border' && h.resource !== 'playableSea' && h.resource !== 'fog') {
-                            resStats[h.resource] += PP_MAP[h.number] || 0;
-                        }
-                    });
-                });
+                p.settlements.forEach(s => s.adj.forEach(h => { if (h.isTile && !['border','playableSea','fog'].includes(h.resource)) resStats[h.resource] += PP_MAP[h.number] || 0; }));
                 const resDisplay = Object.entries(resStats).filter(([_, val]) => val > 0).map(([res, val]) => `
                     <div class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                        <div class="w-2.5 h-2.5 rounded-full" style="background: ${COLORS[res]}"></div>
-                        <span class="text-[10px] font-bold text-slate-600">${val}</span>
+                        <div class="w-2.5 h-2.5 rounded-full" style="background: ${COLORS[res]}"></div><span class="text-[10px] font-bold text-slate-600">${val}</span>
                     </div>`).join('');
-                div.innerHTML = `
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-lg player-${p.id} flex items-center justify-center text-[10px] font-black text-white shadow-sm border border-black/5">${p.id}</div>
-                            <span class="font-black text-xs text-slate-400 uppercase tracking-tighter text-slate-400">Gracz ${p.id}</span>
-                        </div>
-                        <span class="text-sm font-black text-slate-800">${p.pp} PP</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-3">
-                        <div class="stat-bar h-full bg-slate-800 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.1)]" style="width: ${(p.pp/15)*100}%"></div>
-                    </div>
+                div.innerHTML = `<div class="flex justify-between items-center mb-3 text-slate-900"><div class="flex items-center gap-2"><div class="w-6 h-6 rounded-lg player-${p.id} flex items-center justify-center text-[10px] font-black text-white">${p.id}</div><span class="font-black text-xs text-slate-400 uppercase tracking-tighter">Gracz ${p.id}</span></div>
+                    <span class="text-sm font-black text-slate-800">${p.pp} PP</span></div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-3"><div class="stat-bar h-full bg-slate-800 rounded-full" style="width: ${(p.pp/15)*100}%"></div></div>
                     <div class="flex flex-wrap gap-1.5 mt-2">${resDisplay}</div>`;
                 list.appendChild(div);
             });
@@ -654,74 +583,25 @@
         }
 
         showHexDetails(h) {
-            const pCount = parseInt(document.getElementById('playerCount').value);
-            const sKey = document.getElementById('scenario').value;
-            const cfg = SCENARIOS[sKey][pCount];
+            const pCount = parseInt(document.getElementById('playerCount').value); const sKey = document.getElementById('scenario').value; const cfg = SCENARIOS[sKey][pCount];
             if (h.isFog) {
-                const resList = Object.entries(cfg.hiddenResources).map(([res, count]) => `
-                        <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 text-slate-900">
-                            <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded-full" style="background: ${COLORS[res]}"></div>
-                                <span class="font-bold">${RESOURCE_LABELS[res]}</span>
-                            </div>
-                            <span class="font-black text-slate-400">x${count}</span>
-                        </div>`).join('');
-                const numList = [...new Set(cfg.hiddenNumbers)].sort((a,b) => a-b).map(num => {
-                    const count = cfg.hiddenNumbers.filter(x => x === num).length;
-                    return `<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-lg text-xs font-black">${num}${count > 1 ? ' (x'+count+')' : ''}</span>`;
-                }).join(' ');
-                const content = `
-                    <div class="p-8 rounded-3xl text-white text-center shadow-lg mb-6" style="background: ${COLORS.fog}">
-                        <div class="text-4xl font-black mb-2 italic tracking-tighter uppercase">Mgła</div>
-                        <div class="font-bold opacity-70">Pole do losowania</div>
-                    </div>
-                    <div class="space-y-4">
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2">Surowce do wymieszania:</p>
-                        <div class="grid grid-cols-1 gap-2">${resList}</div>
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-2 pt-2 text-slate-400 text-center">Numery do wymieszania:</p>
-                        <div class="flex flex-wrap gap-2 justify-center">${numList}</div>
-                        <div class="p-4 bg-blue-50 text-blue-700 rounded-2xl text-[11px] leading-relaxed italic border border-blue-100">
-                            <strong>Zasada:</strong> Wymieszaj powyższe pola i numery zakryte. Połóż je na planszy w miejscach oznaczonych ikoną chmury. Odkryj je dopiero, gdy gracz postawi drogę lub statek przy krawędzi tego pola.
-                        </div>
-                    </div>`;
-                this.openModal("Zasady obszaru mgły", content);
-                return;
+                const resList = Object.entries(cfg.hiddenResources).map(([res, count]) => `<div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 text-slate-900"><div class="flex items-center gap-3"><div class="w-4 h-4 rounded-full" style="background: ${COLORS[res]}"></div><span class="font-bold">${RESOURCE_LABELS[res]}</span></div><span class="font-black text-slate-400">x${count}</span></div>`).join('');
+                const numList = [...new Set(cfg.hiddenNumbers)].sort((a,b) => a-b).map(num => `<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-lg text-xs font-black text-slate-900">${num} (x${cfg.hiddenNumbers.filter(x => x === num).length})</span>`).join(' ');
+                const content = `<div class="p-8 rounded-3xl text-white text-center shadow-lg mb-6" style="background: ${COLORS.fog}"><div class="text-4xl font-black mb-2 italic tracking-tighter uppercase text-white">Mgła</div></div>
+                    <div class="space-y-4 text-slate-900"><p class="text-xs font-black text-slate-400 uppercase border-b pb-2">Do wymieszania:</p><div class="grid grid-cols-1 gap-2">${resList}</div><p class="text-xs font-black text-slate-400 uppercase border-b pb-2 pt-2">Liczby:</p><div class="flex flex-wrap gap-2 justify-center">${numList}</div></div>`;
+                this.openModal("Zasady obszaru mgły", content); return;
             }
-            const content = `
-                <div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${COLORS[h.resource] || COLORS.playableSea}">
-                    <div class="text-4xl font-black mb-2 italic tracking-tighter uppercase">${RESOURCE_LABELS[h.resource]}</div>
-                    <div class="font-bold opacity-70">${h.number ? 'Produkcja: '+h.number : 'Brak produkcji'}</div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mt-4 text-slate-900">
-                    <div class="p-4 rounded-2xl bg-slate-50 border font-mono text-center">Q: ${h.q}, R: ${h.r}</div>
-                    <div class="p-4 rounded-2xl bg-slate-50 border font-bold text-center uppercase text-[10px] text-slate-400">${h.hasRobber ? '👤 Złodziej' : (h.hasPirate ? '🏴‍☠️ Pirat' : 'Wolne')}</div>
-                    <div class="col-span-2 p-3 bg-blue-50 text-blue-600 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest">${h.canStart ? '✅ Tu można zacząć grę' : '❌ Brak startu'}</div>
-                </div>`;
+            const content = `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${COLORS[h.resource] || COLORS.playableSea}"><div class="text-4xl font-black mb-2 italic tracking-tighter uppercase text-white">${RESOURCE_LABELS[h.resource]}</div><div class="font-bold opacity-70 text-white">${h.number ? 'Produkcja: '+h.number : 'Brak produkcji'}</div></div><div class="grid grid-cols-2 gap-4 mt-4 text-slate-900 text-center"><div class="p-4 rounded-2xl bg-slate-50 border font-mono">Q: ${h.q}, R: ${h.r}</div><div class="p-4 rounded-2xl bg-slate-50 border font-bold uppercase text-[10px] text-slate-400">${h.hasRobber ? 'Złodziej' : (h.hasPirate ? 'Pirat' : 'Wolne')}</div></div>`;
             this.openModal("Szczegóły Pola", content);
         }
 
         showNodeDetails(n) {
-            this.openModal(n.owner ? `Osada Gracza ${n.owner}` : "Pusty Węzeł", `
-                <div class="bg-slate-900 p-8 rounded-3xl text-white text-center">
-                    <div class="text-[10px] uppercase tracking-widest opacity-50 mb-1 text-center">Potencjał Produkcji</div>
-                    <div class="text-6xl font-black text-center">${n.totalPP} <span class="text-xl opacity-30 italic">PP</span></div>
-                </div>
-                <div class="space-y-3 mt-4 text-slate-900">
-                    ${n.adj.map(h => (h.isTile && h.resource !== 'border' && h.resource !== 'playableSea' && h.resource !== 'fog') ? `
-                    <div class="flex items-center justify-between p-3 bg-slate-50 border rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full" style="background:${COLORS[h.resource]}"></div>
-                            <span class="font-bold text-slate-900">${RESOURCE_LABELS[h.resource]}</span>
-                        </div>
-                        <span class="font-black text-slate-900">${h.number || ''}</span>
-                    </div>` : '').join('')}
-                </div>`);
+            this.openModal(`Osada Gracza ${n.owner}`, `<div class="bg-slate-900 p-8 rounded-3xl text-white text-center"><div class="text-6xl font-black text-white">${n.totalPP} PP</div></div><div class="space-y-3 mt-4 text-slate-900">${n.adj.map(h => h.isTile ? `<div class="flex items-center justify-between p-3 bg-slate-50 border rounded-xl"><div class="flex items-center gap-2 text-slate-900"><div class="w-3 h-3 rounded-full" style="background:${COLORS[h.resource]}"></div><span class="font-bold text-slate-900">${RESOURCE_LABELS[h.resource]}</span></div><span class="font-black text-slate-900">${h.number || ''}</span></div>` : '').join('')}</div>`);
         }
 
-        showPortDetails(p) { this.openModal("Szczegóły Portu", `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${p.type==='any'?'#1e293b':COLORS[p.type]}"><div class="text-6xl font-black mb-2 tracking-tighter text-white">${p.type==='any'?'3:1':'2:1'}</div><div class="font-bold opacity-70 italic uppercase tracking-widest text-center text-white">${RESOURCE_LABELS[p.type]}</div></div><p class="text-slate-500 font-medium text-center mt-4 px-4 text-xs text-slate-400 text-slate-400">Pozwala na wymianę surowców w stosunku ${p.type==='any'?'3 do 1':'2 do 1 dla ' + RESOURCE_LABELS[p.type]} w banku.</p>`); }
+        showPortDetails(p) { this.openModal("Szczegóły Portu", `<div class="p-8 rounded-3xl text-white text-center shadow-lg" style="background:${p.type==='any'?'#1e293b':COLORS[p.type]}\"><div class="text-6xl font-black mb-2 text-white">${p.type==='any'?'3:1':'2:1'}</div><div class="font-bold opacity-70 text-white uppercase italic text-center text-white">${RESOURCE_LABELS[p.type]}</div></div><p class="mt-6 text-slate-500 italic text-center px-4">Pozwala na wymianę surowców w stosunku ${p.type==='any'?'3 dowolne na 1 wybrany':'2 żetony '+RESOURCE_LABELS[p.type]+' na 1 wybrany'} w banku.</p>`); }
         openModal(t, c) { document.getElementById('modalTitle').textContent = t; document.getElementById('modalContent').innerHTML = c; document.body.classList.add('modal-open'); document.getElementById('modalOverlay').classList.remove('hidden'); setTimeout(()=>document.getElementById('modalOverlay').classList.add('opacity-100'), 10); }
         closeModal() { document.body.classList.remove('modal-open'); document.getElementById('modalOverlay').classList.remove('opacity-100'); setTimeout(()=>document.getElementById('modalOverlay').classList.add('hidden'), 300); }
-        shuffle(a) { for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
     }
     window.onload = () => { window.app = new CatanGenerator(); };
 </script>
